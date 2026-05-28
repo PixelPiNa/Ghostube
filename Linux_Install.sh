@@ -28,13 +28,13 @@ cd "$Carpetadedatos" || {
 
 # MENU
 while true; do
-    echo "\n================================================\n"
-    echo "         Gestor del Servidor Multimedia \n"
-    echo "================================================\n"
-    echo " 1) Instalar dependencias (solo la primera vez)"
-    echo " 2) Iniciar servidor"
-    echo " 3) Salir \n"
-    echo "================================================\n"
+    echo -e "\n================================================\n"
+    echo -e "         Gestor del Servidor Multimedia \n"
+    echo -e "================================================\n"
+    echo -e " 1) Instalar dependencias (solo la primera vez)"
+    echo -e " 2) Iniciar servidor"
+    echo -e " 3) Salir \n"
+    echo -e "================================================\n"
     read -p "Elige una opcion (1, 2 o 3): " opcion
 
     if [ "$opcion" == "1" ]; then
@@ -43,7 +43,7 @@ while true; do
         python3 -m venv instalacion || { echo "[ERROR] Falló la creación del entorno virtual."; continue; }
         
         echo "[+] Instalando dependencias, asegurate de tener internet..."
-        instalacion/bin/pip install -r requirements.txt || { echo "\n\n\n\n\n\n[ERROR] Falló la instalación de dependencias."; continue; }
+        instalacion/bin/pip install -r requirements.txt || { echo -e "\n\n\n\n\n\n[ERROR] Falló la instalación de dependencias."; continue; }
         
         echo "[!] Instalacion completada."
 

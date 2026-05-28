@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración</title>
+    <style>
+        body { background:#121212; color:#eee; font-family:sans-serif; padding:20px; max-width:800px; margin:0 auto; }
+        h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #ff5252; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #333; }
+        input[type="text"] { background: #222; border: 1px solid #444; color: white; padding: 5px; width: 100%; }
+        .btn { padding: 10px 20px; background: #ff5252; color: white; border: none; cursor: pointer; }
+        .volver { display:inline-block; margin-bottom:20px; color:#aaa; text-decoration:none; }
+    </style>
+</head>
+<body>
+    <a href="/" class="volver">← Volver al Cine</a>
+    <a href="{{ url_for('config.logout') }}" style="float:right; color:#ff5252;">Cerrar Sesión</a>
+    
+    <h1>⚙️ Configuraciones</h1>
+
+    <h2>📂 Gestión de Carpetas</h2>
+    <form action="{{ url_for('config.guardar_ubicaciones') }}" method="POST">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ruta</th>
+                    <th>Sobrenombre</th>
+                    <th>Color Etiqueta</th> <th>Activa</th>
+                    <th>Borrar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ubi in ubicaciones %}
+                <tr>
+                    <td style="font-size:0.8rem; color:#888;">{{ ubi.ruta }}</td>
+                    
+                    <td>
+                        <input type="text" name="nombre_{{ ubi.id }}" value="{{ ubi.nombre }}">
+                    </td>
+                    
+                    <td>
+                        <select name="color_{{ ubi.id }}" style="background:#222; color:white; border:1px solid #444; padding:5px;">
+                            <option value="#ff5252" {% if ubi.color == '#ff5252' %}selected{% endif %}>🔴 Rojo</option>
+                            <option value="#4CAF50" {% if ubi.color == '#4CAF50' %}selected{% endif %}>🟢 Verde</option>
+                            <option value="#2196F3" {% if ubi.color == '#2196F3' %}selected{% endif %}>🔵 Azul</option>
+                            <option value="#FFC107" {% if ubi.color == '#FFC107' %}selected{% endif %}>🟡 Amarillo</option>
+                            <option value="#E91E63" {% if ubi.color == '#E91E63' %}selected{% endif %}>🌸 Rosa</option>
+                            <option value="#00BCD4" {% if ubi.color == '#00BCD4' %}selected{% endif %}>💧 Celeste</option>
+                        </select>
+                    </td>
+
+                    <td style="text-align:center;">
+                        <input type="checkbox" name="activa_{{ ubi.id }}" {% if ubi.activa %}checked{% endif %}>
+                    </td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" name="borrar_{{ ubi.id }}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <h3>Agregar Nueva Carpeta</h3>
+        <input type="text" name="nueva_ruta" placeholder="/ruta/absoluta/a/tus/videos" style="width: 70%; display:inline-block;">
+        
+        <br><br>
+        <button type="submit" class="btn">Guardar Cambios en Carpetas</button>
+    </form>
+
+    <hr style="border-color: #444; margin: 30px 0;">
+
+        <h2>📂 Auto-Etiquetado por Carpetas</h2>
+        <p style="font-size:0.9rem; color:#aaa;">
+            Detecta subcarpetas y agrega una etiqueta a todos los archivos que contenga. 
+            <br><em>Nota: Solo afecta a los archivos directos de esa carpeta, no a sus subcarpetas internas.</em>
+        </p>
+
+        {% if not carpetas_detectadas %}
+            <form action="{{ url_for('config.detectar_carpetas') }}" method="GET">
+                <button type="submit" class="btn" style="background-color: #2196F3;">
+                    🔍 Escanear Carpetas Ahora
+                </button>
+            </form>
+        {% endif %}
+
+        {% if carpetas_detectadas %}
+        <datalist id="lista_tags_existentes">
+                {% for tag in tags %}
+                    <option value="{{ tag.nombre }}">
+                {% endfor %}
+            </datalist>
+
+            <form action="{{ url_for('config.aplicar_autotags') }}" method="POST">
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #444; margin-bottom: 15px;">
+                    <table style="margin-bottom: 0;">
+                        <thead style="position: sticky; top: 0; background: #1e1e1e;">
+                            <tr>
+                                <th>Ruta de la Carpeta</th>
+                                <th style="width: 100px;">Archivos</th>
+                                <th>Tag a aplicar (Dejar vacío para ignorar)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for carpeta in carpetas_detectadas %}
+                            <tr>
+                                <input type="hidden" name="rutas_carpeta" value="{{ carpeta.ruta }}">
+                                
+                                <td style="font-size: 0.8rem; color: #ccc; word-break: break-all;">
+                                    {{ carpeta.ruta }}
+                                </td>
+                                <td style="text-align: center; color: #888;">
+                                    {{ carpeta.cantidad }}
+                                </td>
+                                <td>
+                                    <input type="text" 
+                                           name="nombres_tags" 
+                                           list="lista_tags_existentes" 
+                                           autocomplete="off"
+                                           placeholder="Ej: Vacaciones..." 
+                                           style="width: 90%;">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn" style="background-color: #4CAF50; flex: 1;">
+                        💾 Aplicar Etiquetas Masivas
+                    </button>
+                    <a href="{{ url_for('config.panel') }}" class="btn" style="background-color: #555; text-decoration: none; text-align: center;">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        {% endif %}
+
+        <hr style="border-color: #444; margin: 30px 0;">
+
+
+    <h2>🏷️ Lista Negra de Tags</h2>
+    <p style="font-size:0.9rem; color:#aaa;">Los tags marcados no aparecerán en las sugerencias del buscador.</p>
+    
+    <form action="{{ url_for('config.guardar_tags') }}" method="POST">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+            {% for tag in tags %}
+            <label style="background:#222; padding:5px; display:block;">
+                <input type="checkbox" name="oculto_{{ tag.id }}" {% if tag.oculto %}checked{% endif %}>
+                {{ tag.nombre }}
+            </label>
+            {% endfor %}
+        </div>
+        <br>
+        <button type="submit" class="btn">Actualizar Lista Negra</button>
+    </form>
+
+
+
+    <h2 style="color: #FFC107;">🧹 Mantenimiento</h2>
+        <div style="background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444;">
+            <p style="margin-top:0;">
+                <strong>Limpieza de Base de Datos:</strong><br>
+                <span style="font-size: 0.9rem; color: #aaa;">
+                Esto eliminará las etiquetas que no se usan en ningún video (tags huérfanos) 
+                y compactará el archivo de base de datos para ahorrar espacio.
+                </span>
+            </p>
+            
+            <form action="{{ url_for('config.limpiar_basura') }}" method="POST">
+                <button type="submit" class="btn" style="background-color: #FF9800; color: black; font-weight: bold;">
+                    ♻️ Ejecutar Limpieza Profunda
+                </button>
+            </form>
+        </div>
+        
+        <br><br>
+
+    <hr style="border-color: #444; margin: 20px 0;">
+
+        <p style="margin-top:0;">
+            <strong>🧨 Purgar Base de Datos (Rutas eliminadas):</strong><br>
+            <span style="font-size: 0.9rem; color: #aaa;">
+            Si borraste una carpeta de la lista de arriba, sus videos siguen en la memoria. 
+            Este botón eliminará de la base de datos todos los videos que pertenezcan a carpetas que ya no gestionas.
+            <br>
+            <em style="color: #ff5252;">(Tus archivos originales en el disco NO se tocarán).</em>
+            </span>
+        </p>
+        
+        <form action="{{ url_for('config.purgar_db') }}" method="POST">
+            <button type="submit" class="btn" style="background-color: #D32F2F; color: white; font-weight: bold; width: 100%;">
+                ☠️ PURGAR VIDEOS HUÉRFANOS
+            </button>
+        </form>
+
+    </div> <br><br>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorar Colección</title>
+    <style>
+        /* Estilos generales para mantener el diseño consistente */
+        body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #ff5252; margin-bottom: 30px; }
+        
+        /* Contenedor centralizado para la barra de búsqueda */
+        .contenedor-busqueda {
+            text-align: center;
+            margin-bottom: 40px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        /* Estilo del campo de texto de búsqueda */
+        #search_box {
+            padding: 12px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #333;
+            color: white;
+            font-size: 1rem;
+            vertical-align: middle;
+        }
+
+        /* Contenedor donde se agruparán todos los botones de las etiquetas */
+        .grid-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Diseño interactivo de cada botón de etiqueta */
+        .btn-tag {
+            background-color: transparent;
+            color: #ff5252;
+            border: 1px solid #ff5252;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        /* Efecto al pasar el ratón por encima del botón */
+        .btn-tag:hover {
+            background-color: #ff5252;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Botón para regresar a la cuadrícula principal -->
+    <div style="position: absolute; top: 20px; left: 20px;">
+        <a href="{{ url_for('inicio') }}" style="text-decoration: none; color: #888; font-size: 1.2rem;">← Volver al inicio</a>
+    </div>
+
+    <h1>🏷️ Explorar Etiquetas</h1>
+
+    <!-- SECCIÓN DE BÚSQUEDA -->
+    <div class="contenedor-busqueda">
+        <!-- El formulario apunta a 'inicio' para que envíe la consulta a tu cuadrícula principal -->
+        <!-- Agregamos un ID al formulario para controlarlo con JavaScript -->
+        <form action="{{ url_for('inicio') }}" method="GET" id="form_explorar">
+            <input type="hidden" name="modo_busqueda" value="and">
+            <input type="hidden" name="orden" value="alfabetico"> <!-- Aseguramos el orden correcto -->
+            
+            <!-- NUEVO: Input oculto que enviará el formato JSON -->
+            <input type="hidden" name="q" id="hidden_q">
+            
+            <!-- Al input visible le quitamos el name="q" para que no viaje en la URL -->
+            <input type="text" id="search_box" placeholder="Selecciona etiquetas abajo...">
+            
+            <button type="submit" style="padding: 12px 20px; border-radius: 5px; border: none; background: #ff5252; color: white; cursor: pointer; vertical-align: middle; font-size: 1rem; margin-left: 10px;">
+                Buscar
+            </button>
+        </form>
+    </div>
+
+    <!-- SECCIÓN DE BOTONES DE ETIQUETAS -->
+    <div class="grid-tags">
+        <!-- Generamos un botón por cada etiqueta que nos envió el código de Python -->
+        {% for tag in tags %}
+            <!-- Al hacer clic, llamamos a la función de JavaScript pasándole el nombre de la etiqueta -->
+            <button class="btn-tag" onclick="agregarAlBuscador('{{ tag.nombre }}')">
+                {{ tag.nombre }}
+            </button>
+        {% endfor %}
+    </div>
+
+    <!-- LÓGICA DE PROGRAMACIÓN EN EL NAVEGADOR (JAVASCRIPT) -->
+    <script>
+            // Función 1: Agregar el texto al cuadro visible (Igual que antes)
+            function agregarAlBuscador(nombreTag) {
+                var input = document.getElementById('search_box');
+                
+                if (input.value.length > 0) {
+                    input.value = input.value + "," + nombreTag;
+                } else {
+                    input.value = nombreTag;
+                }
+                
+                input.focus();
+            }
+
+            // Función 2: El "Traductor" que se activa al presionar Buscar
+            document.getElementById('form_explorar').addEventListener('submit', function(e) {
+                var inputVisible = document.getElementById('search_box');
+                var inputOculto = document.getElementById('hidden_q');
+                
+                if (inputVisible.value.length > 0) {
+                    // Separamos el texto por comas
+                    var tagsArray = inputVisible.value.split(',');
+                    
+                    // Lo convertimos en la estructura JSON que usa Tagify
+                    var jsonTags = tagsArray.map(function(tag) { 
+                        return { "value": tag.trim() }; 
+                    }).filter(function(tag) {
+                        return tag.value !== ""; // Evitamos enviar etiquetas en blanco
+                    });
+                    
+                    // Guardamos el JSON en el input oculto que viaja al servidor
+                    inputOculto.value = JSON.stringify(jsonTags);
+                }
+            });
+        </script>
+
+</body>
+</html>

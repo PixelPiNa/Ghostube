@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', filename='css/tagify.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ url_for('static', filename='js/tagify.js') }}"></script>
+    <title>Ghostube</title>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #ff5252; }
+        
+        .grid-videos {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px;
+        }
+        .tarjeta {
+            background-color: #1e1e1e; border-radius: 8px; overflow: hidden;
+            transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative;
+        }
+        .tarjeta:hover { transform: scale(1.03); cursor: pointer; }
+        .miniatura {
+            height: 160px; /* Un poco más alto para ver mejor */
+            background-color: #000; /* Fondo negro por si el video tarda en cargar */
+            display: block; /* Importante para que el video ocupe todo */
+        }
+        .info { padding: 15px; }
+        .titulo { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* Estilo para la etiqueta de ubicación */
+        .ubicacion-badge {
+            font-size: 0.7rem;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5); /* Sombra para que se lea mejor */
+        }
+        
+        .tags { font-size: 0.8rem; color: #888; }
+        a { text-decoration: none; color: inherit; }
+
+        /* Hacer que la caja de Tagify parezca tu input negro original */
+        .tagify {
+            background: #333;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            padding: 5px;
+            width: 350px; /* Un poco más ancho para las píldoras */
+            display: inline-flex !important;
+            vertical-align: middle;
+        }
+
+        /* Estilo de las píldoras (Tags) */
+        .tagify__tag {
+            background-color: #ff5252; /* Rojo como tu botón */
+            color: white;
+            border-radius: 3px;
+        }
+
+        .tagify__tag__removeBtn {
+            color: white;
+        }
+
+        /* El texto que escribes */
+        .tagify__input {
+            color: white !important;
+        }
+
+        /* El menú de sugerencias */
+        .tagify__dropdown {
+            background: #222;
+            border: 1px solid #444;
+        }
+
+        .tagify__dropdown__item--active {
+            background: #ff5252;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="{{ url_for('inicio') }}"><h1>🎬 Ghostube</h1> </a>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <div style="text-align: center; margin: 20px 0;">
+                <form action="{{ url_for('inicio') }}" method="GET" style="display:inline;">
+                    <input type="hidden" name="modo_busqueda" id="modo_input" value="{{ modo_busqueda }}">
+
+                    <input name="q" id="search_tags" 
+                           placeholder="Buscar título o tag..." 
+                           value="{{ busqueda if busqueda else '' }}"
+                           style="vertical-align: middle;">
+
+                    <button type="button" id="btn_modo" onclick="alternarModo()" 
+                            style="padding: 10px; border-radius: 5px; border: none; background: #444; color: white; cursor: pointer; margin: 0 5px; width: 40px; vertical-align: middle;">
+                        {% if modo_busqueda == 'and' %}🔬{% else %}🔍{% endif %}
+                    </button>
+
+                    <button type="submit" 
+                            style="padding: 10px 20px; border-radius: 5px; border: none; background: #ff5252; color: white; cursor: pointer; vertical-align: middle;">
+                        Buscar
+                    </button>
+                    <select name="orden" onchange="this.form.submit()" style="padding: 10px; border-radius: 5px; border: none; background: #444; color: white; margin-left: 10px; vertical-align: middle; cursor: pointer;">
+                        <option value="id_desc" {% if orden == 'id_desc' %}selected{% endif %}>🕒 Más Recientes</option>
+                        <option value="alfabetico" {% if orden == 'alfabetico' %}selected{% endif %}>🔤 Alfabético (A-Z)</option>
+                    </select>
+                </form>
+            </div>
+
+            <script>
+                function alternarModo() {
+                    var input = document.getElementById('modo_input');
+                    var btn = document.getElementById('btn_modo');
+                    
+                    if (input.value === 'or') {
+                        // Cambiar a ESTRICTO
+                        input.value = 'and';
+                        btn.innerText = '🔬'; 
+                        btn.style.background = '#666'; // Un poco más claro para indicar activo
+                    } else {
+                        // Cambiar a FLEXIBLE
+                        input.value = 'or';
+                        btn.innerText = '🔍';
+                        btn.style.background = '#444'; // Vuelve al gris oscuro
+                    }
+                }
+            </script>
+        <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 15px;">
+            
+            <a href="{{ url_for('cambiar_modo') }}" style="text-decoration: none; font-size: 1.5rem;" title="Cambiar modo de vista">
+                {% if modo == 'videos' %}
+                    🎥 <span style="font-size: 1rem; color: #888;">Videos</span>
+                {% elif modo == 'imagenes' %}
+                    🖼️ <span style="font-size: 1rem; color: #888;">Fotos</span>
+                {% else %}
+                    🎡 <span style="font-size: 1rem; color: #888;">Todo</span>
+                {% endif %}
+            </a>
+
+            <a href="{{ url_for('config.login') }}" style="font-size: 1.5rem; text-decoration: none;" title="Configuración">⚙</a>
+
+            <a href="{{ url_for('explorar_tags') }}" style="text-decoration: none; font-size: 1.5rem;" title="Explorar Etiquetas">🏷️</a>
+                    
+        
+        </div>
+
+    </div>
+    <div class="grid-videos">
+        {% for video in paginacion.items %}
+        <a href="{{ url_for('ver_video', id_video=video.id, q=busqueda, modo_busqueda=modo_busqueda, orden=orden) }}">
+            <div class="tarjeta">
+                
+                <div class="miniatura" style="padding: 0; position: relative;">
+                    
+                    {% if video.tipo == 'imagen' %}
+                        <img loading="lazy" 
+                             src="{{ url_for('stream_video', id_video=video.id) }}" 
+                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0;">
+                             
+                    {% else %}
+                        <video 
+                            data-src="{{ url_for('stream_video', id_video=video.id) }}#t=10" 
+                            class="lazy"
+                            muted loop
+                            onmouseover="this.play()" 
+                            onmouseout="this.pause()"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0;"
+                        ></video>
+                        
+                        <span class="duracion-badge" 
+                              style="background-color: rgba(0,0,0,0.8); color: white; font-size: 0.75rem; padding: 2px 5px; border-radius: 4px; position: absolute; bottom: 5px; right: 5px; z-index: 10;">
+                            {{ video.duracion }}
+                        </span>
+                    {% endif %}
+
+                    {% if video.ubicacion %}
+                        <span class="ubicacion-badge" 
+                              style="background-color: {{ video.ubicacion.color }}; position: absolute; top: 5px; right: 5px; z-index: 10;">
+                            {{ video.ubicacion.nombre }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="info">
+                    <div class="titulo">{{ video.titulo }}</div>
+                    <div class="tags">
+                        {% if video.tags %}
+                            Tags: {{ video.tags|map(attribute='nombre')|join(', ') }}
+                        {% else %}
+                            Sin etiquetas
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+<div style="text-align: center; margin: 40px 0; padding: 20px; background: #1e1e1e; border-radius: 8px;">
+    
+    <span style="color: #888; margin-right: 15px;">
+        Página {{ paginacion.page }} de {{ paginacion.pages }}
+    </span>
+
+    {% if paginacion.has_prev %}
+        <a href="{{ url_for('inicio', page=paginacion.prev_num, q=busqueda, modo_busqueda=modo_busqueda, orden=orden) }}" 
+           style="background: #333; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; margin-right: 5px;">
+           ← Anterior
+        </a>
+    {% else %}
+        <span style="background: #222; color: #555; padding: 8px 15px; border-radius: 4px; margin-right: 5px; cursor: not-allowed;">
+            ← Anterior
+        </span>
+    {% endif %}
+
+    {% if paginacion.has_next %}
+        <a href="{{ url_for('inicio', page=paginacion.next_num, q=busqueda, modo_busqueda=modo_busqueda, orden=orden) }}" 
+           style="background: #ff5252; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px;">
+           Siguiente →
+        </a>
+    {% else %}
+        <span style="background: #222; color: #555; padding: 8px 15px; border-radius: 4px; cursor: not-allowed;">
+            Siguiente →
+        </span>
+    {% endif %}
+    
+</div>
+
+<script>
+    // ESTE SCRIPT ES MAGIA PURA PARA EL RENDIMIENTO
+    document.addEventListener("DOMContentLoaded", function() {
+        var lazyVideos = [].slice.call(document.querySelectorAll("video.lazy"));
+
+        if ("IntersectionObserver" in window) {
+            var lazyVideoObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(video) {
+                    if (video.isIntersecting) {
+                        // Cuando el video entra en la pantalla...
+                        for (var source in video.target.children) {
+                            var videoSource = video.target.children[source];
+                            if (typeof videoSource.tagName === "string" && videoSource.tagName === "SOURCE") {
+                                videoSource.src = videoSource.dataset.src;
+                            }
+                        }
+                        // Movemos la info de 'data-src' a 'src' para que cargue
+                        video.target.src = video.target.dataset.src;
+                        video.target.classList.remove("lazy");
+                        video.target.load(); // Forzamos la carga del frame
+                        lazyVideoObserver.unobserve(video.target);
+                    }
+                });
+            });
+
+            lazyVideos.forEach(function(lazyVideo) {
+                lazyVideoObserver.observe(lazyVideo);
+            });
+        }
+    });
+    // Obtenemos los nombres de los tags desde Python para el autocompletado
+    var listaTags = [{% for tag in todos_los_tags %}"{{ tag.nombre }}",{% endfor %}];
+
+    var input = document.querySelector('#search_tags');
+    var tagify = new Tagify(input, {
+        whitelist: listaTags,
+        enforceWhitelist: false, // IMPORTANTE: Permite escribir títulos que no son tags
+        dropdown: {
+            enabled: 0, // Mostrar sugerencias desde la primera letra
+            maxItems: 10,
+            mapValueTo: "value"
+        }
+    });
+</script>
+<script>
+    var input = document.querySelector('input[name=tags]');
+    
+    var tagify = new Tagify(input, {
+        whitelist: [], 
+        maxTags: 10,
+        dropdown: {
+            maxItems: 20,           
+            classname: "tags-look", 
+            enabled: 0,             
+            closeOnSelect: false    
+        }
+    });
+
+    // Pedimos los tags al servidor y los metemos en la lista de sugerencias
+    fetch('/api/tags')
+        .then(response => response.json())
+        .then(listaTags => {
+            tagify.settings.whitelist = listaTags;
+        })
+        .catch(err => console.log("Error cargando tags: ", err));
+        
+    // ¡Listo! No necesitas hacer nada más. 
+    // Tagify se encarga de enviar el JSON al guardar el formulario.
+</script>
+
+
+</body>
+</html>

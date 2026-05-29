@@ -1,0 +1,217 @@
+body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
+h1 { text-align: center; color: #ff5252; }
+.botono {
+    padding: 10px 20px; 
+    margin: 0 5px;
+    border-radius: 10px; 
+    border: none; 
+    background: #ff5252; 
+    color: white; 
+    cursor: pointer; 
+    vertical-align: middle; 
+    display: inline-block;
+    
+}
+.botono:hover { 
+    background-color: #ff1744; }
+
+.botono2 {
+    padding: 10px 20px; 
+    margin: 0 5px;
+    border-radius: 10px; 
+    border: none; 
+    background: #333; 
+    color: white; 
+    cursor: pointer; 
+    vertical-align: middle; 
+    display: inline-block;
+
+}
+.botono2:hover { 
+    background-color: #1d1d1d; }
+
+.inactive_botono {
+    background: #222; 
+    color: #555; 
+    padding: 10px 20px; 
+    margin: 0 5px;
+    border-radius: 10px;  
+    border: none; 
+    vertical-align: middle;
+    cursor: not-allowed;
+    display: inline-block;
+}
+
+/*                                                          TAGIFY Y SUS MOMOS*/
+.inputdetexto,
+.tagify {
+    vertical-align: middle;
+    box-sizing: border-box;
+    padding: 12px;
+    width: 300px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #444 !important;
+    background: #474747;
+    color: white;
+    font-size: 1rem;
+}
+
+.inputcien {
+    width: 100%;
+}
+
+/* Estilo de las píldoras (Tags) */
+.tagify__tag {
+    background-color: #ff5252; 
+    color: white;
+    border-radius: 3px;
+}
+.tagify__tag__removeBtn {
+    color: white;
+}
+/* El texto que escribes */
+.tagify__input {
+    color: white !important;
+}
+/* El menú de sugerencias */
+.tagify__dropdown__wrapper ,
+.tagify__dropdown {
+    background: #222 !important;
+    border: 1px solid #444 !important;
+    color: white !important;
+}
+.tagify__dropdown__item--active {
+    background: #ff5252 !important;
+}
+
+
+
+/*                                                          INDEX HTML          */
+
+
+.grid-videos {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px;
+}
+.tarjeta {
+    background-color: #1e1e1e; border-radius: 8px; overflow: hidden;
+    transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative;
+}
+.tarjeta:hover { transform: scale(1.03); cursor: pointer; }
+.miniatura {
+    height: 160px; /* Un poco más alto para ver mejor */
+    background-color: #000; /* Fondo negro por si el video tarda en cargar */
+    display: block; /* Importante para que el video ocupe todo */
+}
+.info { padding: 15px; }
+.titulo { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Estilo para la etiqueta de dispositivo en el que se encuentra */
+.ubicacion-badge {
+    font-size: 0.7rem;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5); /* Sombra para que se lea mejor */
+}
+
+.tags { font-size: 0.8rem; color: #888; }
+a { text-decoration: none; color: inherit; }
+
+
+
+
+/*                                                          EXPLORAR  ETIQUETAS HTML            */
+/* Contenedor centralizado para la barra de búsqueda */
+
+.contenedor_grisoscuro{
+    text-align: center; 
+    margin: 20px 0; 
+    padding: 20px; 
+    background: #1e1e1e; 
+    border-radius: 8px;
+}
+
+/* Contenedor donde se agruparán todos los botones de las etiquetas */
+.grid-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
+}
+/* Diseño interactivo de cada botón de etiqueta */
+.btn-tag {
+    background-color: transparent;
+    color: #ff5252;
+    border: 1px solid #ff5252;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+/* Efecto al pasar el ratón por encima del botón */
+.btn-tag:hover {
+    background-color: #ff5252;
+    color: white;
+}
+
+
+
+
+/*                                                          ver video HTML         */
+.contenedor { max-width: 1000px; margin: 0 auto; }
+.botono_texto { display: inline-block; margin-bottom: 20px; color: #aaa; text-decoration: none; font-size: 0.9rem; }
+.botono_texto:hover { color: #fff; }
+        
+.contenedorresponsivo {
+    display:flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.multimedia {
+    text-align: center; 
+    max-height: 80vh;
+}
+
+video { width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); background: #000; }
+        
+
+.datos { background-color: #1e1e1e; padding: 20px; margin-top: 20px; border-radius: 8px;}
+
+@media (orientation: landscape) {
+    .contenedorresponsivo {
+        flex-direction: row;
+    }
+    .multimedia {
+        max-width: 60vw;
+        
+    }
+    .datos {
+        margin-top: 0;
+    }
+}
+
+
+        
+/* Ajustes visuales para Tagify en modo oscuro */
+
+label { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 10px;}
+
+.texto_info { color: #888; font-size: 0.9rem;}
+
+.contenedor_resaltado
+{
+    background-color: #222;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+

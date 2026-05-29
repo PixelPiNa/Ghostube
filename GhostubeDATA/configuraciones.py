@@ -37,7 +37,7 @@ def logout():
 
 # ----------------------------------------------------- Configuraciones
 
-# 1. y 3. Gestión de Carpetas (Sobrenombres y Activar/Desactivar/Agregar)
+# Gestión de Carpetas (Sobrenombres y Activar/Desactivar/Agregar)
 @config_bp.route('/guardar_ubicaciones', methods=['POST'])
 def guardar_ubicaciones():
     if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
@@ -199,30 +199,34 @@ def aplicar_autotags():
         if not string_tags.strip():
             continue
             
-        # esta cosa de aqui separa el texto por comas y hace ignorar los espacios extras que podrias buguear la bdd
-        # Ej: "Accion, Drama  , 4K" -> ["Accion", "Drama", "4K"]
-        tags_separados = [t.strip() for t in string_tags.split(',')]
+        
+        try:
+            import json
+            datos_tagify = json.loads(string_tags)
+            tags_separados = [item['value'].strip() for item in datos_tagify]
+        except:
+            # Fallback por si llega texto plano
+            tags_separados = [t.strip() for t in string_tags.split(',')]
         
         # Ahora se procesa cada tag individualmente
         for nombre_tag in tags_separados:
-            if not nombre_tag: continue # Ignoramos si se puso dos comas seguidas (,,)
+            if not nombre_tag: continue
             
-            # Busca o Crea el Tag (pa no duplicarlos y asi)
+            # Buscar o Crea el Tag
             tag_db = Tag.query.filter_by(nombre=nombre_tag).first()
             if not tag_db:
                 tag_db = Tag(nombre=nombre_tag)
                 db.session.add(tag_db)
                 tags_creados += 1
             
-            # Buscar videos y aplicar los tags
+            # Busca videos y aplica
             videos_en_carpeta = Video.query.all()
             for video in videos_en_carpeta:
+                import os # Asegurarnos de que OS esté disponible
                 if os.path.dirname(video.ruta_completa) == ruta:
                     if tag_db not in video.tags:
                         video.tags.append(tag_db)
                         videos_afectados += 1
     
     db.session.commit()
-    print(f"--- AUTO-TAG: {tags_creados} tags nuevos, {videos_afectados} asignaciones realizadas. ---")
-    
     return redirect(url_for('config.panel'))

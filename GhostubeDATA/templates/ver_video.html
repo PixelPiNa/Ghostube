@@ -6,98 +6,69 @@
     <title>Viendo: {{ video.titulo }}</title>
     
     <link href="{{ url_for('static', filename='css/tagify.css') }}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <style>
-        body { background-color: #0f0f0f; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
-        .contenedor { max-width: 1000px; margin: 0 auto; }
-        .btn-volver { display: inline-block; margin-bottom: 20px; color: #aaa; text-decoration: none; font-size: 0.9rem; }
-        .btn-volver:hover { color: #fff; }
-        
-        video { width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); background: #000; }
-        
-        .datos { background-color: #1e1e1e; padding: 20px; margin-top: 20px; border-radius: 8px; }
-        
-        input[type="text"] {
-            width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px;
-            background-color: #333; border: 1px solid #444; color: white; border-radius: 4px;
-        }
-
-        /* Ajustes visuales para Tagify en modo oscuro */
-        .tagify { --tags-border-color: #444; --tags-hover-border-color: #666; --tags-focus-border-color: #ff5252; background: #333; color: white; }
-        .tagify__tag { color: black; }
-        .tagify__dropdown { background: #333; color: white; border-color: #444; }
-        .tagify__dropdown__item--active { background: #ff5252; color: white; }
-
-        label { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 10px;}
-        button { background-color: #ff5252; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 15px;}
-        button:hover { background-color: #ff1744; }
-        .info-ruta { font-size: 0.8rem; color: #555; margin-top: 20px; word-break: break-all;}
-    </style>
 </head>
 <body>
 
 <div class="contenedor">
     <!--<a href="{{ url_for('inicio') }}" class="btn-volver">← Volver a la lista</a>-->
-    <a href="#" onclick="history.back(); return false;" class="btn-volver">← Volver a la lista</a>
-
-                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #1e1e1e; padding: 10px 20px; border-radius: 8px;">
-        
-                    <div>
-                        {% if prev_id %}
-                            <a href="{{ url_for('ver_video', id_video=prev_id, q=q, modo_busqueda=modo_busqueda, orden=orden) }}" 
-                               style="background: #444; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none;">
-                               ⬅️ Anterior
-                            </a>
-                        {% else %}
-                            <span style="color: #555; padding: 8px 15px;">⬅️ Inicio de la lista</span>
-                        {% endif %}
-                    </div>
-
-                    <div style="color: #888; font-size: 0.9rem;">
-                        {% if q %}🔎 Resultados de Búsqueda{% else %}📚 Colección Completa{% endif %}
-                    </div>
-
-                    <div>
-                        {% if next_id %}
-                            <a href="{{ url_for('ver_video', id_video=next_id, q=q, modo_busqueda=modo_busqueda, orden=orden) }}" 
-                               style="background: #ff5252; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none;">
-                               Siguiente ➡️
-                            </a>
-                        {% else %}
-                            <span style="color: #555; padding: 8px 15px;">Fin de la lista ➡️</span>
-                        {% endif %}
-                    </div>
-        
-                </div>
-
+    <a href="#" onclick="history.back(); return false;" class="botono_texto">← Retroceder              ||</a>
+    <a href="{{ url_for('inicio') }}" class="botono_texto">🎬inicio </a>
+     <div class="contenedor_grisoscuro" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            {% if prev_id %}
+                <a href="{{ url_for('ver_video', id_video=prev_id, q=q, modo_busqueda=modo_busqueda, orden=orden) }}" 
+                   class="botono2">
+                   ⬅️ Anterior
+                </a>
+            {% else %}
+                <span class="inactive_botono">⬅️ Inicio de la lista</span>
+            {% endif %}
+        </div>
+        <div class="texto_info">
+            {% if q %}🔎 Resultados de Búsqueda{% else %}📚 Colección Completa{% endif %}
+        </div>
+        <div>
+            {% if next_id %}
+                <a href="{{ url_for('ver_video', id_video=next_id, q=q, modo_busqueda=modo_busqueda, orden=orden) }}" class="botono">
+                   Siguiente ➡️
+                </a>
+            {% else %}
+                <span class="inactive_botono">Fin de la lista ➡️</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="contenedorresponsivo">
     {% if video.tipo == 'imagen' %}
-            <div style="text-align: center; max-height: 80vh;">
-                <img src="{{ url_for('stream_video', id_video=video.id) }}" 
-                     style="max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+            <div >
+                <img src="{{ url_for('stream_video', id_video=video.id) }}" class="multimedia"
+                     style="border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
             </div>
         {% else %}
-            <video controls autoplay style="max-height: 80vh;">
+            <video controls autoplay class="multimedia">
                 <source src="{{ url_for('stream_video', id_video=video.id) }}" type="video/mp4">
                 Tu navegador no soporta este video.
             </video>
         {% endif %}
     <div class="datos">
         <form action="{{ url_for('guardar_cambios', id_video=video.id) }}" method="POST">
-            
             <label>Título del Video</label>
-            <input type="text" name="titulo" value="{{ video.titulo }}">
-
+            <input type="text" class="inputdetexto" style="width: 100%;" name="titulo" value="{{ video.titulo }}">
             <label>Etiquetas (Escribe y presiona Enter)</label>
-            <input name="tags" placeholder="Ej: accion, corto" value="{{ video.tags|map(attribute='nombre')|join(', ') }}">
-
-            <button type="submit">Guardar Cambios</button>
+            <input name="tags" class="inputdetexto inputcien" style="width: 100%;" placeholder="Ej: accion, corto" value="{{ video.tags|map(attribute='nombre')|join(', ') }}">
+            <label></label>
+            <button type="submit" class="botono">
+                Guardar Cambios
+            </button>
         </form>
-
-        <div class="info-ruta">
+        <div class="texto_info">
             Ubicación: {{ video.ruta_completa }}
         </div>
     </div>
 </div>
+
 
 <script src="{{ url_for('static', filename='js/tagify.js') }}"></script>
 

@@ -1,0 +1,16 @@
+venv/
+env/
+
+instance/
+*.db
+*.sqlite3
+
+instalacion/
+
+
+__pycache__/
+*.pyc
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db

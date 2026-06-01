@@ -1,37 +1,44 @@
-body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
-h1 { text-align: center; color: #ff5252; }
+body { background-color: #160d0d; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
+h1 { text-align: center; color: #e0c0c0; }
 .botono {
     padding: 10px 20px; 
     margin: 0 5px;
     border-radius: 10px; 
     border: none; 
-    background: #ff5252; 
+    background: #ff1f1f; 
     color: white; 
     cursor: pointer; 
     vertical-align: middle; 
     display: inline-block;
+    transition: all 0.2s ease;
     
 }
 .botono:hover { 
-    background-color: #ff1744; }
+    background-color: #c90028; 
+    }
 
 .botono2 {
     padding: 10px 20px; 
     margin: 0 5px;
     border-radius: 10px; 
     border: none; 
-    background: #333; 
+    background: #503e3e; 
     color: white; 
     cursor: pointer; 
     vertical-align: middle; 
     display: inline-block;
+    transition: all 0.2s ease;
+    
 
 }
 .botono2:hover { 
-    background-color: #1d1d1d; }
+    background-color: #5a2828;
+    ; 
+}
+    
 
 .inactive_botono {
-    background: #222; 
+    background: #251f1f; 
     color: #555; 
     padding: 10px 20px; 
     margin: 0 5px;
@@ -45,16 +52,17 @@ h1 { text-align: center; color: #ff5252; }
 /*                                                          TAGIFY Y SUS MOMOS*/
 .inputdetexto,
 .tagify {
+    border-radius: 10px !important;  
     vertical-align: middle;
     box-sizing: border-box;
     padding: 12px;
     width: 300px;
     margin: 5px 0;
-    border-radius: 5px;
     border: 1px solid #444 !important;
-    background: #474747;
-    color: white;
+    background: #e0c0c0;
+    color: #000;
     font-size: 1rem;
+    
 }
 
 .inputcien {
@@ -63,16 +71,16 @@ h1 { text-align: center; color: #ff5252; }
 
 /* Estilo de las píldoras (Tags) */
 .tagify__tag {
-    background-color: #ff5252; 
+    background-color: #c90028; 
     color: white;
-    border-radius: 3px;
+    border-radius: 5px;
 }
 .tagify__tag__removeBtn {
     color: white;
 }
 /* El texto que escribes */
 .tagify__input {
-    color: white !important;
+    color: #000 !important;
 }
 /* El menú de sugerencias */
 .tagify__dropdown__wrapper ,
@@ -82,7 +90,7 @@ h1 { text-align: center; color: #ff5252; }
     color: white !important;
 }
 .tagify__dropdown__item--active {
-    background: #ff5252 !important;
+    background: #cc2323 !important;
 }
 
 
@@ -94,7 +102,7 @@ h1 { text-align: center; color: #ff5252; }
     display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px;
 }
 .tarjeta {
-    background-color: #1e1e1e; border-radius: 8px; overflow: hidden;
+    background-color: #2e2828; border-radius: 8px; overflow: hidden;
     transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative;
 }
 .tarjeta:hover { transform: scale(1.03); cursor: pointer; }
@@ -129,7 +137,7 @@ a { text-decoration: none; color: inherit; }
     text-align: center; 
     margin: 20px 0; 
     padding: 20px; 
-    background: #1e1e1e; 
+    background: #2e2828; 
     border-radius: 8px;
 }
 
@@ -185,7 +193,7 @@ a { text-decoration: none; color: inherit; }
 video { width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); background: #000; }
         
 
-.datos { background-color: #1e1e1e; padding: 20px; margin-top: 20px; border-radius: 8px;}
+.datos { background-color: #2e2828; padding: 20px; margin-top: 20px; border-radius: 8px;}
 
 @media (orientation: landscape) {
     .contenedorresponsivo {
@@ -210,9 +218,9 @@ label { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacin
 
 .contenedor_resaltado
 {
-    background-color: #222;
+    background-color: #2e2828;
     padding: 15px;
     border-radius: 8px;
-    border: 1px solid #444;
+    border: 1px solid #b69c9c;
 }
 

@@ -41,7 +41,7 @@
         <!-- Generamos un botón por cada etiqueta que nos envió el código de Python -->
         {% for tag in tags %}
             <!-- Al hacer clic, llamamos a la función de JavaScript pasándole el nombre de la etiqueta -->
-            <button class="btn-tag" onclick="agregarAlBuscador('{{ tag.nombre }}')">
+            <button class="botono2" onclick="agregarAlBuscador('{{ tag.nombre }}')">
                 {{ tag.nombre }}
             </button>
         {% endfor %}

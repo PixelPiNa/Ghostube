@@ -13,12 +13,12 @@
     --tags-border-color: #DDD;
     --tags-hover-border-color: #CCC;
     --tags-focus-border-color: #3595f6;
-    --tag-border-radius: 3px;
-    --tag-bg: #E5E5E5;
-    --tag-hover: #D3E2E2;
-    --tag-text-color: black;
-    --tag-text-color--edit: black;
-    --tag-pad: 0.3em 0.5em;
+    --tag-border-radius: 5px;
+    --tag-bg: #503e3e;
+    --tag-hover: #503e3e;
+    --tag-text-color: white;
+    --tag-text-color--edit: white;
+    --tag-pad: 0.5em 0.7em;
     --tag-inset-shadow-size: 1.2em;
     --tag-invalid-color: #D39494;
     --tag-invalid-bg: rgba(211, 148, 148, 0.5);
@@ -26,7 +26,7 @@
     --tag--max-width: 100%;
     --tag-hide-transition: 0.3s;
     --tag-remove-bg: rgba(211, 148, 148, 0.3);
-    --tag-remove-btn-color: black;
+    --tag-remove-btn-color: white;
     --tag-remove-btn-bg: none;
     --tag-remove-btn-bg--hover: #c77777;
     --input-color: inherit;

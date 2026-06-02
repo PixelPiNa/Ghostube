@@ -5,7 +5,7 @@ import math
 from flask import Flask, render_template, send_from_directory, request, redirect, url_for, jsonify, session
 from sqlalchemy import or_
 
-from models import db, Video, Tag, Ubicacion
+from models import Configuracion, db, Video, Tag, Ubicacion
 from configuraciones import config_bp
 
 app = Flask(__name__)
@@ -24,7 +24,7 @@ EXT_IMAGEN = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
 
 
 # Esta funcion utiliza ffmpeg, una herramienta preinstalada en algunas distros de linux
-# No creo que funcione en windows sin instalar ffmpeg manualmente, pero si quieres probar, instala ffmpeg y asegurate de que el comando "ffprobe" funcione en tu terminal.
+# Para que esta funcion se ejecute correctamente debes instalar ffmpeg en tu windows y agregarlo al path de aplicaicones.
 def obtener_duracion_ffmpeg(ruta_archivo):
     """Calcula duración solo si es video."""
     try:
@@ -165,6 +165,8 @@ def inicio():
     modo_busqueda = request.args.get('modo_busqueda', 'and') 
     modo_vis = session.get('modo_visualizacion', 'videos')
     orden = request.args.get('orden', 'id_desc') # Capturamos el nuevo filtro de orden
+    config_modo = Configuracion.query.filter_by(clave='modo_miniaturas').first()
+    modo_actual = config_modo.valor if config_modo else 'dinamico'
     
     # Usamos la función ayudante
     query = construir_query_busqueda(busqueda, modo_busqueda, modo_vis, orden)
@@ -173,7 +175,7 @@ def inicio():
     paginacion = query.paginate(page=page, per_page=50, error_out=False)
     todos_los_tags = Tag.query.filter_by(oculto=False).all()
     
-    return render_template('index.html', paginacion=paginacion, busqueda=busqueda, todos_los_tags=todos_los_tags, modo=modo_vis, modo_busqueda=modo_busqueda, orden=orden)
+    return render_template('index.html', modo_miniaturas=modo_actual, paginacion=paginacion, busqueda=busqueda, todos_los_tags=todos_los_tags, modo=modo_vis, modo_busqueda=modo_busqueda, orden=orden)
     
 # Hola adrian
 
@@ -261,4 +263,11 @@ def stream_video(id_video):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # --- INICIALIZAR CONFIGURACIONES POR DEFECTO ---
+        config_miniaturas = Configuracion.query.filter_by(clave='modo_miniaturas').first()
+        if not config_miniaturas:
+            # Si no existe, creamos la fila con la clave y su valor por defecto
+            config_inicial = Configuracion(clave='modo_miniaturas', valor='dinamico')
+            db.session.add(config_inicial)
+            db.session.commit()
     app.run(debug=True, port=5000, host='0.0.0.0')

@@ -143,14 +143,23 @@
                              style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0;">
                              
                     {% else %}
-                        <video 
-                            data-src="{{ url_for('stream_video', id_video=video.id) }}#t=10" 
-                            class="lazy"
-                            muted loop
-                            onmouseover="this.play()" 
-                            onmouseout="this.pause()"
-                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0;"
-                        ></video>
+                        {% if modo_miniaturas == 'estatico' %}
+                            <img src="{{ url_for('static', filename='miniaturas/' ~ video.id ~ '_1.jpg') }}" 
+                                 class="miniatura-slideshow" 
+                                 data-id="{{ video.id }}" 
+                                 data-current="1"
+                                 alt="Miniatura de {{ video.titulo }}"
+                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                            <video 
+                                data-src="{{ url_for('stream_video', id_video=video.id) }}#t=10" 
+                                class="lazy"
+                                muted loop
+                                onmouseover="this.play()" 
+                                onmouseout="this.pause()"
+                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0;"
+                            ></video>
+                        {% endif %}
                         
                         <span class="duracion-badge" 
                               style="background-color: rgba(0,0,0,0.8); color: white; font-size: 0.75rem; padding: 2px 5px; border-radius: 4px; position: absolute; bottom: 5px; right: 5px; z-index: 10;">
@@ -270,6 +279,43 @@
             mapValueTo: "value"
         }
     });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Buscamos todas las imágenes que tengan la clase del slideshow
+    const miniaturas = document.querySelectorAll('.miniatura-slideshow');
+    
+    miniaturas.forEach(img => {
+        let intervalo; // Variable para controlar el temporizador
+        
+        // Cuando el ratón ENTRA a la imagen
+        img.addEventListener('mouseenter', function() {
+            const videoId = this.getAttribute('data-id');
+            let current = parseInt(this.getAttribute('data-current'));
+            
+            // Iniciamos un bucle que cambia la imagen cada 600 milisegundos
+            intervalo = setInterval(() => {
+                current++;
+                if (current > 5) current = 1; // Si llega a la 6, vuelve a la 1
+                
+                this.setAttribute('data-current', current);
+                // Actualizamos la ruta de la imagen
+                this.src = `/static/miniaturas/${videoId}_${current}.jpg`;
+            }, 600); 
+        });
+        
+        // Cuando el ratón SALE de la imagen
+        img.addEventListener('mouseleave', function() {
+            // Detenemos el bucle
+            clearInterval(intervalo);
+            
+            const videoId = this.getAttribute('data-id');
+            // Reseteamos el contador y devolvemos la imagen a la número 1
+            this.setAttribute('data-current', 1);
+            this.src = `/static/miniaturas/${videoId}_1.jpg`; 
+        });
+    });
+});
 </script>
 <script>
     var input = document.querySelector('input[name=tags]');

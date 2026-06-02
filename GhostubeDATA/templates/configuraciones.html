@@ -7,10 +7,12 @@
     <link href="{{ url_for('static', filename='css/tagify.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ url_for('static', filename='js/tagify.js') }}"></script>
     <style>
-        body { background:#121212; color:#eee; font-family:sans-serif; padding:20px; max-width:800px; margin:0 auto; }
+        body { color:#eee; font-family:sans-serif; padding:20px; max-width:800px; margin:0 auto; }
         h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #ffffff; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid #333; }
+        .contenedor_resaltado {width: 100%; background-color: #221e1e; margin: 30px 0}
+        .texto_info {font-size: 0.9rem; color: #aaa;}
     </style>
 </head>
 <body>
@@ -19,6 +21,7 @@
     
     <h1>⚙️ Configuraciones</h1>
 
+    <div class="contenedor_resaltado">
     <h2>📂 Gestión de Carpetas</h2>
     <p class="texto_info">
         Aquí puedes gestionar las carpetas que el servidor escanea para encontrar tus videos. 
@@ -76,7 +79,56 @@
         </table>
         <button type="submit" class="botono" style="width: 40%; margin-left: 30%;">Guardar activos y borrar marcados</button>
     </form>
+    </div>
+    <div class="contenedor_resaltado">
+    <h2>🎞️ Miniaturas</h2>
+    <p class="texto_info">
+        Aqui puedes cambiar la previsualizacion de los videos en la pagina de inicio. Entre el modo Clip y el modo Diapositivas.
+        <br> - El modo Clip te permite ver el video casi completo al pasar el Mouse por encima.
+        <br> - El modo Diapositivas te muestra 5 screenshots extraidos del video al pasar el Mouse por encima.
+        <br><br> ⚠️ Si no tienes FFmpeg instalado, el proceso de generacion no podrá crear screenshots del video. <br> Asegúrate de tener Ffmpeg instalado y agregado a tu PATH para poder usar el modo Diapositivas.
+        <br> <br><a href="https://youtu.be/0zN9oZ98ZgE?si=XfhevpWbnkTQCNVP" style="text-decoration: underline;"> Aprende a descargar FFmpeg </a>
+    </p>
+    <div class="contenedor_grisoscuro">
+        <h3>⚙️ Preferencias Visuales</h3>
 
+        <form action="{{ url_for('config.guardar_modo_visual') }}" method="POST" style="display: flex; align-items: center; gap: 15px;">
+
+            <label for="modo_miniaturas" style="color: #e0e0e0;">Modo de previsualizacion:</label>
+
+            <select name="modo_miniaturas" id="modo_miniaturas" class="botono2">
+                <option value="dinamico" {% if modo_actual == 'dinamico' %}selected{% endif %}>
+                    📽️ Video en vivo. (Clips)
+                </option>
+                <option value="estatico" {% if modo_actual == 'estatico' %}selected{% endif %}>
+                    📷 Screenshots del video. (Diapositivas)
+                </option>
+            </select>
+
+            <button type="submit" class="botono">
+                Guardar Cambio
+            </button>
+        </form>
+    </div>
+    <div class="contenedor_grisoscuro" ">
+        <h3>🖼️ Generar las miniaturas (FFmpeg)</h3>
+        <p class="texto_info">
+            Solo presiona este boton si cambiaste al modo <span style="color: #e7e7e7;">Diapositivas</span>. Esto generará miniaturas en segundo plano.
+        </p>
+        
+        <form action="{{ url_for('config.generar_miniaturas_masivas') }}" method="POST">
+            <button type="submit" class="botono" >
+                ▶ Iniciar Generación de Screenshots
+            </button>
+        </form>
+        <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
+            *Nota: Las screenshots de tus videos se guardaran en la carpeta Ghostube/GhostubeDATA/static/miniaturas/
+        </p>
+    </div>
+    </div>
+
+
+<div class="contenedor_resaltado">
     <hr style="border-color: #444; margin: 30px 0;">
 
         <h2>📂 Auto-Etiquetado por Carpetas</h2>
@@ -172,8 +224,8 @@
                 .catch(err => console.log("Error cargando tags: ", err));
         });
     </script>
-
-
+</div>
+<div class="contenedor_resaltado">
     <h2>🏷️ Lista Negra de Tags</h2>
     <p class="texto_info">Los tags marcados no aparecerán en las sugerencias del buscador.</p>
     
@@ -189,14 +241,14 @@
         <br>
         <button type="submit" class="botono">Actualizar Lista Negra</button>
     </form>
-
+</div>
 
 
     <h2 style="color: #FFC107;">🧹 Mantenimiento</h2>
         <div class="contenedor_resaltado">
             <p style="margin-top:0;">
                 <strong>Limpieza de Base de Datos:</strong><br>
-                <span style="font-size: 0.9rem; color: #aaa;">
+                <span class="texto_info">
                 Esto eliminará las etiquetas que no se usan en ningún video (tags huérfanos) 
                 y compactará el archivo de base de datos para ahorrar espacio.
                 </span>
@@ -215,7 +267,7 @@
         <div class="contenedor_resaltado">
             <p style="margin-top:0;">
                 <strong>🧨 Purgar Base de Datos (Rutas eliminadas):</strong><br>
-                <span style="font-size: 0.9rem; color: #aaa;">
+                <span class="texto_info">
                 Si borraste una carpeta recientemente o desconectaste un disco duro, sus videos siguen registrados en la base de datos de este servidor. 
                 Este botón eliminará los registros de esos videos para que no consuman espacio en la base de datos. 
                 <br>

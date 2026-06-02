@@ -43,3 +43,8 @@ video_tags = db.Table('video_tags',
     db.Column('video_id', db.Integer, db.ForeignKey('video.id'), primary_key=True),
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
 )
+
+class Configuracion(db.Model): #otras cosas
+    __tablename__ = 'configuracion'
+    clave = db.Column(db.String(50), primary_key=True)
+    valor = db.Column(db.String(255), nullable=False)

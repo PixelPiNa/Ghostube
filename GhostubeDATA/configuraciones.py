@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from models import db, Ubicacion, Tag, Video
+from models import db, Ubicacion, Tag, Video, Configuracion
 import os
+import subprocess
+import threading
+from flask import current_app
 
 config_bp = Blueprint('config', __name__)
 
@@ -28,7 +31,10 @@ def panel():
     
     ubicaciones = Ubicacion.query.all()
     tags = Tag.query.all()
-    return render_template('configuraciones.html', ubicaciones=ubicaciones, tags=tags)
+    config_modo = Configuracion.query.filter_by(clave='modo_miniaturas').first()
+    modo_actual = config_modo.valor if config_modo else 'dinamico'
+
+    return render_template('configuraciones.html', modo_actual=modo_actual, ubicaciones=ubicaciones, tags=tags)
 
 @config_bp.route('/logout')
 def logout():
@@ -229,4 +235,92 @@ def aplicar_autotags():
                         videos_afectados += 1
     
     db.session.commit()
+    return redirect(url_for('config.panel'))
+
+# ----------------------------------------------------- MODO DE AUTOVISUALIZACION DE MINIATURAS
+@config_bp.route('/guardar_modo_visual', methods=['POST'])
+def guardar_modo_visual():
+    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
+    
+    nuevo_modo = request.form.get('modo_miniaturas')
+    config = Configuracion.query.filter_by(clave='modo_miniaturas').first()
+    
+    # el nuevo valor va a la tabla general
+    if config:
+        config.valor = nuevo_modo
+    else:
+        nueva_config = Configuracion(clave='modo_miniaturas', valor=nuevo_modo)
+        db.session.add(nueva_config)
+        
+    db.session.commit()
+    return redirect(url_for('config.panel'))
+
+# ----------------------------------------------------- proceso secundario de las miniaturas
+
+def procesar_miniaturas_background(app_context):
+    """Esta función corre en segundo plano para no congelar la página web."""
+    with app_context:
+        # 1. Creamos la carpeta física si no existe
+        from app import app, db, Video # Ajusta la importación según la estructura de tu proyecto
+        carpeta_miniaturas = os.path.join(app.root_path, 'static', 'miniaturas')
+        os.makedirs(carpeta_miniaturas, exist_ok=True)
+
+        videos = Video.query.all()
+        print(f"⚙️ Iniciando escaneo de miniaturas para {len(videos)} videos...")
+
+        for video in videos:
+            # Comprobamos si la primera miniatura de este video ya existe (ej: 5_1.jpg)
+            ruta_img1 = os.path.join(carpeta_miniaturas, f"{video.id}_1.jpg")
+            if os.path.exists(ruta_img1):
+                continue # Si ya existe, saltamos al siguiente video para ahorrar tiempo
+
+            # Si no existe, usamos ffprobe para sacar la duración exacta en segundos
+            comando_duracion = [
+                'ffprobe.exe', '-v', 'error', '-show_entries', 'format=duration', 
+                '-of', 'default=noprint_wrappers=1:nokey=1', video.ruta_completa
+            ]
+            try:
+                salida = subprocess.check_output(comando_duracion, text=True).strip()
+                duracion = float(salida)
+            except Exception as e:
+                print(f"⚠️ Error leyendo duración de {video.ruta_completa}: {e}")
+                continue
+
+            ### if duracion < 5: 
+                # Si es muy corto, tomamos solo 1 foto justo a la mitad
+                momentos = [duracion * 0.5]
+            ### else:
+                # Si es normal, tomamos las 5 fotos
+                momentos = [duracion * 0.1, duracion * 0.3, duracion * 0.5, duracion * 0.7, duracion * 0.9] 
+
+            # Calculamos 5 marcas de tiempo: 10%, 30%, 50%, 70% y 90% del video
+            momentos = [duracion * 0.1, duracion * 0.3, duracion * 0.5, duracion * 0.7, duracion * 0.9]
+            print(f"🎬 Extrayendo 5 miniaturas para: {video.ruta_completa.split('/')[-1]}")
+
+            # Extraemos una imagen por cada marca de tiempo
+            for i, tiempo in enumerate(momentos, start=1):
+                ruta_salida = os.path.join(carpeta_miniaturas, f"{video.id}_{i}.jpg")
+                
+                # Comando de FFmpeg: Busca el segundo exacto (-ss), saca 1 frame (-vframes 1)
+                # ajusta la calidad (-q:v 5) y lo escala a 320px de ancho (-vf scale=320:-1)
+                comando_ffmpeg = [
+                    'ffmpeg.exe', '-y', '-ss', str(tiempo), '-i', video.ruta_completa,
+                    '-vframes', '1', '-q:v', '5', '-vf', 'scale=320:-1', ruta_salida
+                ]
+                # Ejecutamos ocultando los textos largos de FFmpeg
+                subprocess.run(comando_ffmpeg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        print("-" * 50)
+        print("✅ ¡Generación masiva de miniaturas finalizada con éxito!")
+
+# --- RUTA QUE ACTIVA EL BOTÓN ---
+@config_bp.route('/generar_miniaturas_masivas', methods=['POST'])
+def generar_miniaturas_masivas():
+    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
+    
+    # Creamos un hilo independiente, le pasamos el contexto de la app y lo arrancamos
+    hilo = threading.Thread(target=procesar_miniaturas_background, args=(current_app._get_current_object().app_context(),))
+    hilo.start()
+    
+    # El servidor devuelve la respuesta al navegador INMEDIATAMENTE, sin esperar a que terminen los videos
     return redirect(url_for('config.panel'))

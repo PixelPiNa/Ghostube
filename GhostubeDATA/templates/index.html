@@ -78,7 +78,11 @@
 
                     <button type="button" id="btn_modo" onclick="alternarModo()" 
                             class="botono2">
-                        {% if modo_busqueda == 'and' %}🔬{% else %}🔍{% endif %}
+                        {% if modo_busqueda == 'and' %}
+                            <img class="explorar_icon" src="{{ url_for('static', filename='img/searchplus_icon.png') }}" alt="Modo estricto">
+                        {% else %}
+                            <img class="explorar_icon" src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Modo flexible">
+                        {% endif %}
                     </button>
 
                     <button type="submit" class="botono">
@@ -95,16 +99,17 @@
                 function alternarModo() {
                     var input = document.getElementById('modo_input');
                     var btn = document.getElementById('btn_modo');
-                    
+                    var icon = btn.querySelector('img.explorar_icon');
+
                     if (input.value === 'or') {
                         // Cambiar a ESTRICTO
                         input.value = 'and';
-                        btn.innerText = '🔬'; 
+                        if (icon) icon.src = "{{ url_for('static', filename='img/searchplus_icon.png') }}";
                         btn.style.background = '#666'; // Un poco más claro para indicar activo
                     } else {
                         // Cambiar a FLEXIBLE
                         input.value = 'or';
-                        btn.innerText = '🔍';
+                        if (icon) icon.src = "{{ url_for('static', filename='img/search_icon.png') }}";
                         btn.style.background = '#444'; // Vuelve al gris oscuro
                     }
                 }
@@ -113,17 +118,17 @@
             
             <a href="{{ url_for('cambiar_modo') }}" style="text-decoration: none; font-size: 1.5rem; text-align: center;" title="Cambiar modo de vista">
                 {% if modo == 'videos' %}
-                    🎥 <span style="font-size: 1rem; color: #b69c9c;">Videos</span>
+                    <img class="explorar_icon" src="{{ url_for('static', filename='img/movie_icon.png') }}"> <span style="font-size: 1rem; color: #b69c9c;">Videos</span>
                 {% elif modo == 'imagenes' %}
-                    🖼️ <span style="font-size: 1rem; color: #b69c9c;">Fotos</span>
+                    <img class="explorar_icon" src="{{ url_for('static', filename='img/camera_icon.png') }}"> <span style="font-size: 1rem; color: #b69c9c;">Fotos</span>
                 {% else %}
-                    🎡 <span style="font-size: 1rem; color: #b69c9c;">Todo</span>
+                    <img class="explorar_icon" src="{{ url_for('static', filename='img/all_icon.png') }}"> <span style="font-size: 1rem; color: #b69c9c;">Todo</span>
                 {% endif %}
             </a>
 
             <a href="{{ url_for('config.panel') }}"  title="Configuración"><img class="conf_icon" src="{{ url_for('static', filename='img/Config_icon.png') }}" ></a>
 
-            <a href="{{ url_for('explorar_tags') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/O_logo.png') }}">  </a>
+            <a href="{{ url_for('explorar_tags') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/tags_icon.png') }}">  </a>
                     
         
         </div>

@@ -9,14 +9,7 @@
     <script src="{{ url_for('static', filename='js/tagify.js') }}"></script>
     <title>Ghostube</title>
     <style>
-        .conten_titulogo{
-            justify-content: center;
-            display: flex;
-        }
-        .titulogo:hover{
-            scale: 1.05;
-            transition: transform 0.8s ease-in-out;
-        }
+        
         .explorar_icon,
         .conf_icon{
             margin-top: 6px;
@@ -77,22 +70,37 @@
                            >
 
                     <button type="button" id="btn_modo" onclick="alternarModo()" 
-                            class="botono2">
+                            class="botono2" style="padding: 2px 15px;">
                         {% if modo_busqueda == 'and' %}
-                            <img class="explorar_icon" src="{{ url_for('static', filename='img/searchplus_icon.png') }}" alt="Modo estricto">
+                            <img title="Cambia entre modo de busqueda PRECISA y FLEXIBLE" class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/esoeso_icon.png') }}" alt="Modo estricto">
                         {% else %}
-                            <img class="explorar_icon" src="{{ url_for('static', filename='img/search_icon.png') }}" alt="Modo flexible">
+                            <img title="Cambia entre modo de busqueda PRECISA y FLEXIBLE" class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/world_icon.png') }}" alt="Modo flexible">
                         {% endif %}
                     </button>
 
                     <button type="submit" class="botono">
                         Buscar
                     </button>
-                    <select name="orden" onchange="this.form.submit()" class="botono2">
-                        <option value="id_desc" {% if orden == 'id_desc' %}selected{% endif %}>🕒 Más Recientes</option>
-                        <option value="alfabetico" {% if orden == 'alfabetico' %}selected{% endif %}>🔤 Alfabético (A-Z)</option>
-                    </select>
+                    <div class="botono2" style="position: relative; display: inline-block; padding: 2px 15px;">
+
+                        {% if orden == 'id_desc' %}
+                            <img class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/clock_icon.png') }}" >
+                        {% else %}
+                            <img class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/az_icon.png') }}" >
+                        {% endif %}
+
+                        <select name="orden" onchange="this.form.submit()" class="botono2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; padding:0; margin:0;">
+                            <option value="id_desc" {% if orden == 'id_desc' %}selected{% endif %}>
+                                -- Más Recientes --
+                            </option>
+                            <option value="alfabetico" {% if orden == 'alfabetico' %}selected{% endif %}>
+                                -- Alfabético (A-Z) --
+                            </option>
+                        </select>
+
+                    </div>
                 </form>
+                
             </div>
 
             <script>
@@ -104,35 +112,44 @@
                     if (input.value === 'or') {
                         // Cambiar a ESTRICTO
                         input.value = 'and';
-                        if (icon) icon.src = "{{ url_for('static', filename='img/searchplus_icon.png') }}";
-                        btn.style.background = '#666'; // Un poco más claro para indicar activo
+                        if (icon) icon.src = "{{ url_for('static', filename='img/esoeso_icon.png') }}";
                     } else {
                         // Cambiar a FLEXIBLE
                         input.value = 'or';
-                        if (icon) icon.src = "{{ url_for('static', filename='img/search_icon.png') }}";
-                        btn.style.background = '#444'; // Vuelve al gris oscuro
+                        if (icon) icon.src = "{{ url_for('static', filename='img/world_icon.png') }}";
                     }
                 }
             </script>
         <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; background-color: #413333; border-radius: 8px; padding: 5px 10px; align-items: center; outline: 1px solid #b69c9c;">
             
-            <a href="{{ url_for('cambiar_modo') }}" style="text-decoration: none; font-size: 1.5rem; text-align: center;" title="Cambiar modo de vista">
+            <a href="{{ url_for('cambiar_modo') }}" style="text-decoration: none; font-size: 1.5rem; text-align: center;">
                 {% if modo == 'videos' %}
-                    <img class="explorar_icon" src="{{ url_for('static', filename='img/movie_icon.png') }}"> <span style="font-size: 1rem; color: #b69c9c;">Videos</span>
+                    <img class="explorar_icon" src="{{ url_for('static', filename='img/movie_icon.png') }}" title="Modo: Solo Videos"> <span style="font-size: 1rem; color: #b69c9c;"></span>
                 {% elif modo == 'imagenes' %}
-                    <img class="explorar_icon" src="{{ url_for('static', filename='img/camera_icon.png') }}"> <span style="font-size: 1rem; color: #b69c9c;">Fotos</span>
+                    <img class="explorar_icon" src="{{ url_for('static', filename='img/camera_icon.png') }}" title="Modo: Solo Fotos"> <span style="font-size: 1rem; color: #b69c9c;"></span>
                 {% else %}
-                    <img class="explorar_icon" src="{{ url_for('static', filename='img/all_icon.png') }}"> <span style="font-size: 1rem; color: #b69c9c;">Todo</span>
+                    <img class="explorar_icon" src="{{ url_for('static', filename='img/all_icon.png') }}" title="Modo: Todo"> <span style="font-size: 1rem; color: #b69c9c;"></span>
                 {% endif %}
             </a>
+            
+            <a href="{{ url_for('config.panel') }}"  title="Configuración"><img class="conf_icon" src="{{ url_for('static', filename='img/conf_icon.png') }}" title="Panel de configuraciones"></a>
 
-            <a href="{{ url_for('config.panel') }}"  title="Configuración"><img class="conf_icon" src="{{ url_for('static', filename='img/Config_icon.png') }}" ></a>
+            <a href="{{ url_for('explorar_tags') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/tags_icon.png') }}" title="Explorar Tags">  </a>
 
-            <a href="{{ url_for('explorar_tags') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/tags_icon.png') }}">  </a>
+            <a href="{{ url_for('informacion') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/O_logo.png') }}" title="Acerca de este proyecto">  </a>
                     
         
         </div>
 
+    </div>
+    <div class="contenedorresponsivo" style="margin:0;padding:0;height: 20px;">
+        {% if modo == 'videos' %}
+        <p class="texto_info" style="color:#725656;">Mostrando solo videos</p>
+        {% elif modo == 'imagenes' %}
+        <p class="texto_info" style="color:#725656;">Mostrando solo imagenes</p>
+        {% else %}
+        <p class="texto_info" style="color:#725656;">Mostrando todo</p>
+        {% endif %}
     </div>
     <div style="width: 80vw; outline: 1px solid #503e3e; left: 10vw; position: absolute;"></div><br>
     <div class="grid-videos">

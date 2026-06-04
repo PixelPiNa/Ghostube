@@ -224,6 +224,12 @@ def ver_video(id_video):
     return render_template('ver_video.html', video=video, prev_id=prev_id, next_id=next_id, q=q, modo_busqueda=modo_busqueda, orden=orden)
 
 
+# ---------------------------------------------- HTML de "ABOUT GHOSTUBE"
+@app.route('/boutm')
+def informacion():
+    return render_template('boutm.html')
+
+
 # ---------------------------------------------- HERRAMIENTA: GUARDAR CAMBIOS DE UN VIDEO (TITULO Y TAGS)
 @app.route('/guardar/<int:id_video>', methods=['POST'])
 def guardar_cambios(id_video):

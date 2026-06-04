@@ -1,5 +1,14 @@
 body { background-color: #160d0d; color: #e0e0e0; font-family: sans-serif; margin: 0; padding: 20px; }
 h1 { text-align: center; color: #e0c0c0; }
+.conten_titulogo{
+    justify-content: center;
+    display: flex;
+}
+.titulogo:hover{
+    scale: 1.05;
+    transition: transform 0.8s ease-in-out;
+}
+
 .botono {
     padding: 10px 20px; 
     margin: 0 5px;

@@ -1,0 +1,43 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acerca de este proyecto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        a{
+            text-decoration:underline;
+            color: white;
+            margin: 10 px;
+        }
+    </style>
+</head>
+<body>
+    <div class="conten_titulogo">
+        <a href="{{ url_for('inicio') }}">
+        <img class="titulogo" src="{{ url_for('static', filename='img/Ghostube_logo.png') }}" alt="Ghostube" style="width: 30vw; min-width: 100px; height: auto;">
+        </a>
+    </div>
+    <div class="contenedor_grisoscuro">
+        <h2>Proposito de Ghostube</h2>
+        Este proyecto busca brindarte una experiencia muy comoda para ver tus propios videos con tu propio servidor.
+        <br>Hecho especificamente para esas personas que buscan una alternativa decente para la visualizacion de su propio contenido.
+
+    </div>
+    <div class="contenedor_grisoscuro ">
+        <h2>Acerca de mí</h2>
+            <div class="contenedorresponsivo">
+            <div>
+                <p>
+                    ¡Hola! Soy PixelPiña, el creador de Ghostube. Soy principalmente un animador e ilustrador independiente que intenta sobrevivir a base de sus proyectos.
+                </p>
+                <br>
+                <a href="https://instagram.com/pixelpina_" class="botono">Mi instagram</a>
+                <a href="https://github.com/PixelPiNa/Ghostube" class="botono2">Github</a>
+            </div>
+            <img src="{{ url_for('static', filename='img/pixelpina_logo.png') }}" style="max-width: 80vw; max-height: 300px;">
+        </div>
+
+    </div>
+</body>
+</html>

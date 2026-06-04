@@ -7,8 +7,8 @@ from flask import current_app
 
 config_bp = Blueprint('config', __name__)
 
-# CONTRASEÑA SIMPLE (Cámbiala aquí)
-CONTRASENA_ADMIN = "25320740"
+# CONTRASEÑA DEL MODO CONFIGURACION (Cámbiala aquí)
+CONTRASENA_ADMIN = "1234"
 
 
 # -----------------------------------------------------RUTAS

@@ -61,22 +61,24 @@
     <div style="text-align: center; margin-bottom: 30px;">
         <div style="text-align: center; margin: 20px 0;">
                 <form action="{{ url_for('inicio') }}" method="GET" style="display:inline;">
-                    <input type="hidden" name="modo_busqueda" id="modo_input" value="{{ modo_busqueda }}">
 
                     <input name="q" id="search_tags" 
                             class="busqueda_input"
                            placeholder="Buscar título o tag..." 
-                           value="{{ busqueda if busqueda else '' }}"
-                           >
+                           value="{{ busqueda if busqueda else '' }}">
 
-                    <button type="button" id="btn_modo" onclick="alternarModo()" 
-                            class="botono2" style="padding: 2px 15px;">
+                    <div class="botono2" style="position: relative; display: inline-block; padding: 2px 15px;" title="Precisión de búsqueda">
                         {% if modo_busqueda == 'and' %}
-                            <img title="Cambia entre modo de busqueda PRECISA y FLEXIBLE" class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/esoeso_icon.png') }}" alt="Modo estricto">
+                            <img class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/esoeso_icon.png') }}" alt="Modo estricto">
                         {% else %}
-                            <img title="Cambia entre modo de busqueda PRECISA y FLEXIBLE" class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/world_icon.png') }}" alt="Modo flexible">
+                            <img class="explorar_icon" style="margin-top:2px;" src="{{ url_for('static', filename='img/world_icon.png') }}" alt="Modo flexible">
                         {% endif %}
-                    </button>
+
+                        <select name="modo_busqueda" onchange="this.form.submit()" class="botono2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; padding:0; margin:0;">
+                            <option value="and" {% if modo_busqueda == 'and' %}selected{% endif %}> &ensp; Tiene todos los tags &ensp;&ensp;&ensp;</option>
+                            <option value="or" {% if modo_busqueda == 'or' %}selected{% endif %}> &ensp; Tiene alguno de los tags &ensp;&ensp;&ensp;</option>
+                        </select>
+                    </div>
 
                     <button type="submit" class="botono">
                         Buscar
@@ -91,54 +93,51 @@
 
                         <select name="orden" onchange="this.form.submit()" class="botono2" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; padding:0; margin:0;">
                             <option value="id_desc" {% if orden == 'id_desc' %}selected{% endif %}>
-                                -- Más Recientes --
+                                &ensp; Más Recientes &ensp;&ensp;&ensp;
                             </option>
                             <option value="alfabetico" {% if orden == 'alfabetico' %}selected{% endif %}>
-                                -- Alfabético (A-Z) --
+                                &ensp; Alfabético (A-Z) &ensp;&ensp;&ensp;
                             </option>
                         </select>
 
                     </div>
+
+                    
+
                 </form>
                 
             </div>
 
-            <script>
-                function alternarModo() {
-                    var input = document.getElementById('modo_input');
-                    var btn = document.getElementById('btn_modo');
-                    var icon = btn.querySelector('img.explorar_icon');
 
-                    if (input.value === 'or') {
-                        // Cambiar a ESTRICTO
-                        input.value = 'and';
-                        if (icon) icon.src = "{{ url_for('static', filename='img/esoeso_icon.png') }}";
-                    } else {
-                        // Cambiar a FLEXIBLE
-                        input.value = 'or';
-                        if (icon) icon.src = "{{ url_for('static', filename='img/world_icon.png') }}";
-                    }
-                }
-            </script>
         <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; background-color: #413333; border-radius: 8px; padding: 5px 10px; align-items: center; outline: 1px solid #b69c9c;">
             
-            <a href="{{ url_for('cambiar_modo') }}" style="text-decoration: none; font-size: 1.5rem; text-align: center;">
-                {% if modo == 'videos' %}
-                    <img class="explorar_icon" src="{{ url_for('static', filename='img/movie_icon.png') }}" title="Modo: Solo Videos"> <span style="font-size: 1rem; color: #b69c9c;"></span>
-                {% elif modo == 'imagenes' %}
-                    <img class="explorar_icon" src="{{ url_for('static', filename='img/camera_icon.png') }}" title="Modo: Solo Fotos"> <span style="font-size: 1rem; color: #b69c9c;"></span>
-                {% else %}
-                    <img class="explorar_icon" src="{{ url_for('static', filename='img/all_icon.png') }}" title="Modo: Todo"> <span style="font-size: 1rem; color: #b69c9c;"></span>
-                {% endif %}
-            </a>
+            <form action="{{ url_for('cambiar_modo') }}" method="GET" style="margin: 0; padding: 0; display: flex; align-items: center;">
+                <div style="position: relative; display: inline-block; cursor: pointer;" title="Filtrar contenido">
+
+                    {% if modo == 'videos' %}
+                        <img class="explorar_icon" src="{{ url_for('static', filename='img/movie_icon.png') }}" title="Modo: Solo Videos">
+                    {% elif modo == 'imagenes' %}
+                        <img class="explorar_icon" src="{{ url_for('static', filename='img/camera_icon.png') }}" title="Modo: Solo Fotos">
+                    {% else %}
+                        <img class="explorar_icon" src="{{ url_for('static', filename='img/all_icon.png') }}" title="Modo: Todo">
+                    {% endif %}
+
+                    <select name="modo_visualizacion" onchange="this.form.submit()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; padding:0; margin:0;background: #503e3e; color: white;">
+                        <option value="videos" {% if modo == 'videos' %}selected{% endif %}> &ensp;Solo Videos </option>
+                        <option value="imagenes" {% if modo == 'imagenes' %}selected{% endif %}> &ensp;Solo Imágenes &ensp;&ensp;&ensp;</option>
+                        <option value="todos" {% if modo != 'videos' and modo != 'imagenes' %}selected{% endif %}> &ensp;Mostrar Todo </option>
+
+                    </select>
+
+                </div>
+            </form>
             
             <a href="{{ url_for('config.panel') }}"  title="Configuración"><img class="conf_icon" src="{{ url_for('static', filename='img/conf_icon.png') }}" title="Panel de configuraciones"></a>
 
             <a href="{{ url_for('explorar_tags') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/tags_icon.png') }}" title="Explorar Tags">  </a>
 
             <a href="{{ url_for('informacion') }}" ><img class="explorar_icon" src="{{ url_for('static', filename='img/O_logo.png') }}" title="Acerca de este proyecto">  </a>
-                    
-        
+
         </div>
 
     </div>

@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="{{ url_for('static', filename='css/tagify.css') }}" rel="stylesheet" type="text/css" />
@@ -11,8 +12,11 @@
         h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #ffffff; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid #333; }
-        .contenedor_resaltado {width: 100%; background-color: #221e1e; margin: 30px 0}
+        .contenedor_resaltado {height: 60px; overflow: hidden; width: 100%; background-color: #221e1e; margin: 30px 0; position: relative;}
+        .contenedor_resaltado.contraido { height: auto; }
         .texto_info {font-size: 0.9rem; color: #aaa;}
+        .absoluto{position:absolute; top: 30px; right: 15px;}
+        
     </style>
 </head>
 <body>
@@ -22,7 +26,7 @@
     <h1>⚙️ Configuraciones</h1>
 
     <div class="contenedor_resaltado">
-    <h2>📂 Gestión de Carpetas</h2>
+    <h2>📂 Gestión de Carpetas</h2> <button class="botono absoluto">▼</button>
     <p class="texto_info">
         Aquí puedes gestionar las carpetas que el servidor escanea para encontrar tus videos. 
         <br>Agrega nuevas rutas, asigna colores y nombres personalizados, o desactiva las que no quieras usar temporalmente.
@@ -81,7 +85,7 @@
     </form>
     </div>
     <div class="contenedor_resaltado">
-    <h2>🎞️ Miniaturas</h2>
+    <h2>🎞️ Miniaturas</h2> <button class="botono absoluto">▼</button>
     <p class="texto_info">
         Aqui puedes cambiar la previsualizacion de los videos en la pagina de inicio. Entre el modo Clip y el modo Diapositivas.
         <br> - El modo Clip te permite ver el video casi completo al pasar el Mouse por encima.
@@ -110,7 +114,7 @@
             </button>
         </form>
     </div>
-    <div class="contenedor_grisoscuro" ">
+    <div class="contenedor_grisoscuro">
         <h3>🖼️ Generar las miniaturas (FFmpeg)</h3>
         <p class="texto_info">
             Solo presiona este boton si cambiaste al modo <span style="color: #e7e7e7;">Diapositivas</span>. Esto generará miniaturas en segundo plano.
@@ -128,10 +132,12 @@
     </div>
 
 
-<div class="contenedor_resaltado">
-    <hr style="border-color: #444; margin: 30px 0;">
-
-        <h2>📂 Auto-Etiquetado por Carpetas</h2>
+{% if not carpetas_detectadas %} <div class="contenedor_resaltado"> {% endif %}
+{% if carpetas_detectadas %} <div class="contenedor_resaltado contraido"> {% endif %}
+    <h2>🏷️ Etiquetas</h2>
+    <div class="contenedor_grisoscuro">
+        <h3>📂 Auto-Etiquetado por Carpetas</h3> 
+        <button class="botono absoluto">▼</button>
         <p class="texto_info">
             Detecta carpetas y agrega una etiqueta a todos los archivos dentro de la misma. 
             <br><em>Nota: No afecta a subcarpetas.</em>
@@ -139,7 +145,7 @@
 
         {% if not carpetas_detectadas %}
             <form action="{{ url_for('config.detectar_carpetas') }}" method="GET">
-                <button type="submit" class="botono" style="background-color: #2196F3; width: 40%; margin-left: 30%;">
+                <button type="submit" class="botono" style="background-color: #2196F3; width: 40%;">
                     🔍 Escanear Carpetas Ahora
                 </button>
             </form>
@@ -153,39 +159,21 @@
             </datalist>
 
             <form action="{{ url_for('config.aplicar_autotags') }}" method="POST">
-                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #444; margin-bottom: 15px;">
-                    <table style="margin-bottom: 0;">
-                        <thead style="position: sticky; top: 0; background: #1e1e1e;">
-                            <tr>
-                                <th>Ruta de la Carpeta</th>
-                                <th style="width: 100px;">Archivos</th>
-                                <th>Tag a aplicar (Dejar vacío para ignorar)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for carpeta in carpetas_detectadas %}
-                            <tr>
-                                <input type="hidden" name="rutas_carpeta" value="{{ carpeta.ruta }}">
-                                
-                                <td style="font-size: 0.8rem; color: #ccc; word-break: break-all;">
-                                    {{ carpeta.ruta }}
-                                </td>
-                                <td style="text-align: center; color: #888;">
-                                    {{ carpeta.cantidad }}
-                                </td>
-                                <td>
-                                    <input type="text" 
-                                        name="nombres_tags" 
-                                        class="tagify-masivo" 
-                                        placeholder="Ej: Vacaciones, Peliculas, Terror..." 
-                                        style="width: 100%;">
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+
+
+                {% for carpeta in carpetas_detectadas %}
+                <div style="padding: 10px; border-radius: 8px; border: 1px solid #746262; margin-bottom: 5px; position: relative;">
+                    <div class="contenedorresponsivo" style="justify-content: space-between; padding: 5px;  margin-bottom: 15px">
+                        <div style="margin-top: 3px; text-align: left; width: auto;"> 
+                            {{ carpeta.ruta | replace('/', '/<wbr>') | replace('\\', '\\<wbr>') | safe }} 
+                        </div>
+                        <input type="text" name="nombres_tags" class="tagify-masivo" placeholder="Ej: Vacaciones, Peliculas, Terror..." style="width: auto;">
+
+                    </div>
+                    <p class="texto_info" style="position:absolute; bottom: 0; left: 10px"> {{ carpeta.cantidad }} archivos </p>
                 </div>
-                
+                {% endfor %}
+
                 <div style="display: flex; gap: 10px;">
                     <button type="submit" class="botono" style="background-color: #4CAF50; flex: 1;">
                         💾 Aplicar Etiquetas Masivas
@@ -196,10 +184,10 @@
                 </div>
             </form>
         {% endif %}
-    <hr style="border-color: #444; margin: 30px 0;">
 
-    <!--     SCRIPT PA QUE FUNCIONE LA COSA DE AUTOTAGIN -->
-    <script>
+
+        <!--     SCRIPT PA QUE FUNCIONE LA COSA DE AUTOTAGIN -->
+        <script>
         document.addEventListener("DOMContentLoaded", function() {
             // se buscan todos los inputs que tengan la clase 'tagify-masivo'
             var inputs = document.querySelectorAll('.tagify-masivo');
@@ -223,66 +211,91 @@
                 })
                 .catch(err => console.log("Error cargando tags: ", err));
         });
-    </script>
-</div>
-<div class="contenedor_resaltado">
-    <h2>🏷️ Lista Negra de Tags</h2>
-    <p class="texto_info">Los tags marcados no aparecerán en las sugerencias del buscador.</p>
-    
-    <form action="{{ url_for('config.guardar_tags') }}" method="POST">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
-            {% for tag in tags %}
-            <label class="botono2">
-                <input type="checkbox" name="oculto_{{ tag.id }}" {% if tag.oculto %}checked{% endif %}>
-                {{ tag.nombre }}
-            </label>
-            {% endfor %}
-        </div>
-        <br>
-        <button type="submit" class="botono">Actualizar Lista Negra</button>
-    </form>
-</div>
+        </script>
+    </div>
 
 
-    <h2 style="color: #FFC107;">🧹 Mantenimiento</h2>
-        <div class="contenedor_resaltado">
-            <p style="margin-top:0;">
-                <strong>Limpieza de Base de Datos:</strong><br>
-                <span class="texto_info">
-                Esto eliminará las etiquetas que no se usan en ningún video (tags huérfanos) 
-                y compactará el archivo de base de datos para ahorrar espacio.
-                </span>
-            </p>
-            
-            <form action="{{ url_for('config.limpiar_basura') }}" method="POST">
-                <button type="submit" class="botono" style="background-color: #FF9800; color: black; font-weight: bold;">
-                    ♻️ Ejecutar Limpieza Profunda
-                </button>
-            </form>
-        </div>
+    <div class="contenedor_grisoscuro">
+        <h3>🏷️ Lista Negra de Tags</h3>
+        <p class="texto_info">Los tags marcados no aparecerán en las sugerencias del buscador.</p>
         
-        <br><br>
+        <form action="{{ url_for('config.guardar_tags') }}" method="POST">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                {% for tag in tags %}
+                <div class="botono2" style="width: auto;">
+                    <input type="checkbox" name="oculto_{{ tag.id }}" {% if tag.oculto %}checked{% endif %}>
+                    {{ tag.nombre }}
+                </div>
+                {% endfor %}
+            </div>
+            <br>
+            <button type="submit" class="botono">Actualizar Lista Negra</button>
+        </form>
+</div>
+</div>
+
+
+
+
+<div class="contenedor_resaltado">
+    <h2 style="color: #FFC107;">🧹 Mantenimiento</h2> <button class="botono absoluto">▼</button>
+    <div class="contenedor_grisoscuro">
+        
+        <p style="margin-top:0;">
+            <strong>Limpieza de Base de Datos:</strong><br>
+            <span class="texto_info">
+            Esto eliminará las etiquetas que no se usan en ningún video (tags huérfanos) 
+            y compactará el archivo de base de datos para ahorrar espacio.
+            </span>
+        </p>
+        
+        <form action="{{ url_for('config.limpiar_basura') }}" method="POST">
+            <button type="submit" class="botono" style="background-color: #FF9800; color: black; font-weight: bold;">
+                ♻️ Ejecutar Limpieza Profunda
+            </button>
+        </form>
+    </div>
+        
+    <br><br>
 
     <hr style="border-color: #444; margin: 20px 0;">
-        <div class="contenedor_resaltado">
-            <p style="margin-top:0;">
-                <strong>🧨 Purgar Base de Datos (Rutas eliminadas):</strong><br>
-                <span class="texto_info">
-                Si borraste una carpeta recientemente o desconectaste un disco duro, sus videos siguen registrados en la base de datos de este servidor. 
-                Este botón eliminará los registros de esos videos para que no consuman espacio en la base de datos. 
-                <br>
-                <em style="color: #ff5252;">(Tus archivos no se borraran, solo los registros en este servidor).</em>
-                </span>
-            </p>
+    <div class="contenedor_grisoscuro">
+        <p style="margin-top:0;">
+            <strong>🧨 Purgar Base de Datos (Rutas eliminadas):</strong><br>
+            <span class="texto_info">
+            Si borraste una carpeta recientemente o desconectaste un disco duro, sus videos siguen registrados en la base de datos de este servidor. 
+            Este botón eliminará los registros de esos videos para que no consuman espacio en la base de datos. 
+            <br>
+            <em style="color: #ff5252;">(Tus archivos no se borraran, solo los registros en este servidor).</em>
+            </span>
+        </p>
+        <form action="{{ url_for('config.purgar_db') }}" method="POST">
+            <button type="submit" class="botono" style="background-color: #D32F2F; color: white; font-weight: bold; width: 90%; margin-left: 5%;">
+                ☠️ PURGAR VIDEOS HUÉRFANOS
+            </button>
+        </form>
+    </div>
 
-            <form action="{{ url_for('config.purgar_db') }}" method="POST">
-                <button type="submit" class="botono" style="background-color: #D32F2F; color: white; font-weight: bold; width: 90%; margin-left: 5%;">
-                    ☠️ PURGAR VIDEOS HUÉRFANOS
-                </button>
-            </form>
-        </div>
+</div> <br><br>
 
-    </div> <br><br>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Seleccionamos todos los botones que tengan la clase 'absoluto'
+        const botones = document.querySelectorAll(".absoluto");
+
+        botones.forEach(boton => {
+            boton.addEventListener("click", function() {
+                // closest() busca hacia arriba en el HTML hasta encontrar el contenedor que lo envuelve
+                const contenedor = this.closest(".contenedor_resaltado");
+
+                if (contenedor) {
+                    contenedor.classList.toggle("contraido");
+                }
+            });
+        });
+    });
+</script>
+    
 
 </body>
 </html>

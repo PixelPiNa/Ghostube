@@ -1,6 +1,7 @@
 import os
 import json
 import subprocess 
+import platform
 import math       
 from flask import Flask, render_template, send_from_directory, request, redirect, url_for, jsonify, session
 from sqlalchemy import or_
@@ -22,13 +23,19 @@ app.register_blueprint(config_bp)
 EXT_VIDEO = ('.mp4', '.mkv', '.avi', '.mov', '.webm')
 EXT_IMAGEN = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
 
+# ---------------------------------------------- Ver si esto es linu o windo
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+if platform.system() == 'Windows':
+    FFPROBE_CMD = os.path.join(BASE_DIR, 'extenzzziones', 'ffprobe.exe')
+else:
+    FFPROBE_CMD = 'ffprobe'
+
 
 # Esta funcion utiliza ffmpeg, una herramienta preinstalada en algunas distros de linux
-# Para que esta funcion se ejecute correctamente debes instalar ffmpeg en tu windows y agregarlo al path de aplicaicones.
 def obtener_duracion_ffmpeg(ruta_archivo):
     """Calcula duración solo si es video."""
     try:
-        comando = ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', ruta_archivo]
+        comando = [FFPROBE_CMD, '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', ruta_archivo]
         resultado = subprocess.check_output(comando).decode('utf-8').strip()
         segundos_total = float(resultado)
         horas = math.floor(segundos_total / 3600)
@@ -39,7 +46,7 @@ def obtener_duracion_ffmpeg(ruta_archivo):
     except: 
         # Si no tienes ffmpeg instalado o algo falla, no te preocupes, solo devuelve lo de abajo
         #cambialo por lo que quieras
-        return "--:--" 
+        return "v:deo" 
 
 # ---------------------------------------------- ESCANEO de Videos e Imagenes
 def escanear_multimedia():
@@ -144,15 +151,11 @@ def construir_query_busqueda(busqueda, modo_busqueda, modo_vis, orden):
 
 @app.route('/cambiar_modo')
 def cambiar_modo():
-    """Alterna entre: videos -> imagenes -> Ambos"""
-    modo_actual = session.get('modo_visualizacion', 'videos')
+    # Atrapamos lo que el usuario eligió en el nuevo desplegable
+    modo_elegido = request.args.get('modo_visualizacion')
     
-    if modo_actual == 'videos':
-        session['modo_visualizacion'] = 'imagenes'
-    elif modo_actual == 'imagenes':
-        session['modo_visualizacion'] = 'todo'
-    else:
-        session['modo_visualizacion'] = 'videos'
+    if modo_elegido in ['videos', 'imagenes', 'todos']:
+        session['modo_visualizacion'] = modo_elegido
         
     return redirect(url_for('inicio'))
 # ---------------------------------------------- PAGINA: PRINCIPAL
@@ -164,7 +167,7 @@ def inicio():
     busqueda = request.args.get('q', '')
     modo_busqueda = request.args.get('modo_busqueda', 'and') 
     modo_vis = session.get('modo_visualizacion', 'videos')
-    orden = request.args.get('orden', 'id_desc') # Capturamos el nuevo filtro de orden
+    orden = request.args.get('orden', 'id_desc')
     config_modo = Configuracion.query.filter_by(clave='modo_miniaturas').first()
     modo_actual = config_modo.valor if config_modo else 'dinamico'
     
@@ -269,10 +272,9 @@ def stream_video(id_video):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # --- INICIALIZAR CONFIGURACIONES POR DEFECTO ---
+        # --- configuraciones por defecto para la tabla miniaturas
         config_miniaturas = Configuracion.query.filter_by(clave='modo_miniaturas').first()
         if not config_miniaturas:
-            # Si no existe, creamos la fila con la clave y su valor por defecto
             config_inicial = Configuracion(clave='modo_miniaturas', valor='dinamico')
             db.session.add(config_inicial)
             db.session.commit()

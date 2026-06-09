@@ -20,10 +20,10 @@
             {% if prev_id %}
                 <a href="{{ url_for('ver_video', id_video=prev_id, q=q, modo_busqueda=modo_busqueda, orden=orden) }}" 
                    class="botono2">
-                   ⬅️ Anterior
+                   🢀 Anterior
                 </a>
             {% else %}
-                <span class="inactive_botono">⬅️ Inicio de la lista</span>
+                <span class="inactive_botono">🡰 Inicio de la lista</span>
             {% endif %}
         </div>
         <div class="texto_info">
@@ -32,10 +32,10 @@
         <div>
             {% if next_id %}
                 <a href="{{ url_for('ver_video', id_video=next_id, q=q, modo_busqueda=modo_busqueda, orden=orden) }}" class="botono">
-                   Siguiente ➡️
+                   Siguiente 🢂
                 </a>
             {% else %}
-                <span class="inactive_botono">Fin de la lista ➡️</span>
+                <span class="inactive_botono">Fin de la lista 🡲</span>
             {% endif %}
         </div>
     </div>
@@ -47,7 +47,7 @@
                      style="border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
             </div>
         {% else %}
-            <video controls autoplay class="multimedia">
+            <video controls autoplay loop class="multimedia">
                 <source src="{{ url_for('stream_video', id_video=video.id) }}" type="video/mp4">
                 Tu navegador no soporta este video.
             </video>
@@ -63,7 +63,7 @@
                 Guardar Cambios
             </button>
         </form>
-        <div class="texto_info">
+        <div class="texto_info" style="overflow-wrap: break-word; margin-top: 15px;">
             Ubicación: {{ video.ruta_completa }}
         </div>
     </div>

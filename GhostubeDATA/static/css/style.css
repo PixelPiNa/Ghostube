@@ -71,6 +71,7 @@ h1 { text-align: center; color: #e0c0c0; }
     background: #e0c0c0;
     color: #000;
     font-size: 1rem;
+    max-width: 100%;
     
 }
 
@@ -202,7 +203,7 @@ a { text-decoration: none; color: inherit; }
 video { width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); background: #000; }
         
 
-.datos { background-color: #2e2828; padding: 20px; margin-top: 20px; border-radius: 8px;}
+.datos { background-color: #2e2828; padding: 20px; margin-top: 20px; border-radius: 8px; }
 
 @media (orientation: landscape) {
     .contenedorresponsivo {
@@ -210,11 +211,23 @@ video { width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); b
     }
     .multimedia {
         max-width: 60vw;
-        
     }
     .datos {
         margin-top: 0;
+         max-width: 28vw;
     }
+}
+@media (orientation: portrait) {
+    .datos {
+        width: 100%;
+    }
+    .multimedia {
+        width: 100vw;
+    }
+    .contenedorresponsivo {
+        padding: 0;
+    }
+
 }
 
 
@@ -223,7 +236,7 @@ video { width: 100%; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); b
 
 label { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 10px;}
 
-.texto_info { color: #888; font-size: 0.9rem;}
+.texto_info { color: #888; font-size: 0.9rem; max-width: 100%; }
 
 .contenedor_resaltado
 {

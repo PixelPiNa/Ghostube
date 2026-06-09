@@ -7,6 +7,9 @@ instance/
 
 instalacion/
 
+GhostubeDATA/extenzzziones/*.exe
+extenzzziones/
+*.exe
 
 __pycache__/
 *.pyc
@@ -19,3 +22,4 @@ miniaturas/
 *.jpg
 *.jpeg
 *.gif
+

@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+
 from models import db, Ubicacion, Tag, Video, Configuracion
 import os
+import platform
 import subprocess
 import threading
 from flask import current_app
@@ -9,6 +11,16 @@ config_bp = Blueprint('config', __name__)
 
 # CONTRASEÑA DEL MODO CONFIGURACION (Cámbiala aquí)
 CONTRASENA_ADMIN = "1234"
+
+# ----------------------------------------------------- Ver si esto es windos o linus pa usar ffmpeg
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+if platform.system() == 'Windows':
+    FFMPEG_CMD = os.path.join(BASE_DIR, 'extenzzziones', 'ffmpeg.exe')
+    FFPROBE_CMD = os.path.join(BASE_DIR, 'extenzzziones', 'ffprobe.exe')
+else:
+    FFMPEG_CMD = 'ffmpeg'
+    FFPROBE_CMD = 'ffprobe'
 
 
 # -----------------------------------------------------RUTAS
@@ -260,13 +272,13 @@ def guardar_modo_visual():
 def procesar_miniaturas_background(app_context):
     """Esta función corre en segundo plano para no congelar la página web."""
     with app_context:
-        # 1. Creamos la carpeta física si no existe
-        from app import app, db, Video # Ajusta la importación según la estructura de tu proyecto
+        # se crea la carpeta si no existe
+        from app import app, db, Video
         carpeta_miniaturas = os.path.join(app.root_path, 'static', 'miniaturas')
         os.makedirs(carpeta_miniaturas, exist_ok=True)
 
         videos = Video.query.all()
-        print(f"⚙️ Iniciando escaneo de miniaturas para {len(videos)} videos...")
+        print(f"[+] Iniciando escaneo de miniaturas para {len(videos)} videos...")
 
         for video in videos:
             # Comprobamos si la primera miniatura de este video ya existe (ej: 5_1.jpg)
@@ -276,14 +288,14 @@ def procesar_miniaturas_background(app_context):
 
             # Si no existe, usamos ffprobe para sacar la duración exacta en segundos
             comando_duracion = [
-                'ffprobe.exe', '-v', 'error', '-show_entries', 'format=duration', 
+                FFPROBE_CMD, '-v', 'error', '-show_entries', 'format=duration', 
                 '-of', 'default=noprint_wrappers=1:nokey=1', video.ruta_completa
             ]
             try:
                 salida = subprocess.check_output(comando_duracion, text=True).strip()
                 duracion = float(salida)
             except Exception as e:
-                print(f"⚠️ Error leyendo duración de {video.ruta_completa}: {e}")
+                print(f"[!] Error leyendo duración de {video.ruta_completa}: {e}")
                 continue
 
             ### if duracion < 5: 
@@ -304,14 +316,14 @@ def procesar_miniaturas_background(app_context):
                 # Comando de FFmpeg: Busca el segundo exacto (-ss), saca 1 frame (-vframes 1)
                 # ajusta la calidad (-q:v 5) y lo escala a 320px de ancho (-vf scale=320:-1)
                 comando_ffmpeg = [
-                    'ffmpeg.exe', '-y', '-ss', str(tiempo), '-i', video.ruta_completa,
+                    FFMPEG_CMD, '-y', '-ss', str(tiempo), '-i', video.ruta_completa,
                     '-vframes', '1', '-q:v', '5', '-vf', 'scale=320:-1', ruta_salida
                 ]
                 # Ejecutamos ocultando los textos largos de FFmpeg
                 subprocess.run(comando_ffmpeg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
+        print("[+] Los errores aparecen cuando intenta leer alguna imagen, es normal que pase.")
         print("-" * 50)
-        print("✅ ¡Generación masiva de miniaturas finalizada con éxito!")
+        print("Se han generado las nuevas miniaturas!")
 
 # --- RUTA QUE ACTIVA EL BOTÓN ---
 @config_bp.route('/generar_miniaturas_masivas', methods=['POST'])

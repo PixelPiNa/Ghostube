@@ -72,7 +72,7 @@ while true; do
         fi
         
         echo "[+] Iniciando servidor flask..."
-        instalacion/bin/python app.py
+        instalacion/bin/python app.py &
         FLASK_PID=$!
         sleep 2
 

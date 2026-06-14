@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Viendo: {{ video.titulo }}</title>
-    
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/movie_icon.png') }}">
     <link href="{{ url_for('static', filename='css/tagify.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
 
 </head>
 <body>
 
 <div class="contenedor">
     <!--<a href="{{ url_for('inicio') }}" class="btn-volver">← Volver a la lista</a>-->
-    <a href="#" onclick="history.back(); return false;" class="botono_texto">← Retroceder              ||</a>
-    <a href="{{ url_for('inicio') }}" class="botono_texto">🎬inicio </a>
+    <a href="#" onclick="regresarAlInicio(); return false;" class="botono_texto">⮌ Volver&emsp;&emsp;</a><span>||</span>
      <div class="contenedor_grisoscuro" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div>
             {% if prev_id %}

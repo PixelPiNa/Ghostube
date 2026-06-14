@@ -45,8 +45,7 @@ def obtener_duracion_ffmpeg(ruta_archivo):
         else: return f"{minutos}:{segundos:02d}"
     except: 
         # Si no tienes ffmpeg instalado o algo falla, no te preocupes, solo devuelve lo de abajo
-        #cambialo por lo que quieras
-        return "v:deo" 
+        return "Video" 
 
 # ---------------------------------------------- ESCANEO de Videos e Imagenes
 def escanear_multimedia():
@@ -71,34 +70,34 @@ def escanear_multimedia():
                     
                     if not video_existente:
                         titulo_limpio = os.path.splitext(archivo)[0]
-                        duracion_str = "--:--" #cambialo por lo que quieras
+                        duracion_str = "1" # Este 1 se va a registrar en la "duracion" de una imagen
                         
                         # Solo calculamos duracion si es un video
                         if es_video:
                             duracion_str = obtener_duracion_ffmpeg(ruta_abs)
                         
                         nuevo_media = Video(
-                            titulo=titulo_limpio, 
-                            archivo=archivo, 
-                            ruta_completa=ruta_abs, 
-                            ubicacion_id=ubicacion.id,
-                            duracion=duracion_str,
-                            tipo=tipo_archivo ### Guardamos el tipo de archivo (video o imagen
+                            titulo=titulo_limpio, # le quita la extencion
+                            archivo=archivo, # el nombre exacto del archivo: archivo_entupc.mp4
+                            ruta_completa=ruta_abs, # La ruta absoluta del archivo
+                            ubicacion_id=ubicacion.id, # el id de la ruta absoluta registrada
+                            duracion=duracion_str, # puede guardar: "Video", "1" o "00:00"
+                            tipo=tipo_archivo # video o imagen
                         )
                         db.session.add(nuevo_media)
                         print(f" [+] Nuevo {tipo_archivo}: {titulo_limpio}")
 
-    # --- LIMPIEZA INTELIGENTE DE VIDEOS QUE FALTAN AL ENCENDER EL SERVER
+    # ------------------- LIMPIEZA INTELIGENTE DE VIDEOS QUE FALTAN AL ENCENDER EL SERVER
     media_db = Video.query.all()
     for item in media_db:
-        # 1- Verificamos si este video tiene una ubicación asignada
+        # este video tiene una ubicación asignada?
         if item.ubicacion:
-            # 2- El disco duro o carpeta raíz esta presente?
+            # El disco duro o carpeta raíz esta presente?
             if not os.path.exists(item.ubicacion.ruta):
-                # 2.1- No está? Pues no lo borramos, puede que lo vuelvas a conectar despues.
+                # No está la carpeta completa? Pues no borramos los videos, puede que vuelvas a conectar la unidad despues.
                 continue 
         
-        # 3. Si el disco SI está conectado, pero el archivo no está,
+        # el disco SI está conectado, pero el archivo no está?
         # entonces el usuario borró el video intencionalmente. Ahora si lo borramos de la Base de Datos.
         if not os.path.exists(item.ruta_completa):
             db.session.delete(item)
@@ -106,25 +105,64 @@ def escanear_multimedia():
             
     db.session.commit()
 
+    # --- MINIATURAS ---
+    # Se lee la configuración de la base de datos
+    config_miniaturas = Configuracion.query.filter_by(clave='modo_miniaturas').first()
+    
+    # si la configuracion de modo es = estatico
+    if config_miniaturas and config_miniaturas.valor == 'estatico':
+        import threading
+        # Importación local para evitar bucles de importación con configuraciones.py
+        from configuraciones import procesar_miniaturas_background
+        
+        print("[T] Buscando nuevos videos para generar miniaturas...")
+        
+        # Lanzamos el proceso sin detener el flujo principal de la app
+        hilo_miniaturas = threading.Thread(target=procesar_miniaturas_background, args=(app.app_context(),))
+        hilo_miniaturas.start()
 
-# ---------------------------------------------- FUNCIÓN AYUDANTE PARA BUSQUEDA Y ORDENAMIENTO
+
+# ---------------------------------------------- FUNCIÓN DE PLAYLIST (para poder avanzar y retroceder en los videos que buscaste y como los decidiste ordenar)
 def construir_query_busqueda(busqueda, modo_busqueda, modo_vis, orden):
     query = Video.query.join(Ubicacion).filter(Ubicacion.activa == True)
     
     if modo_vis == 'videos': query = query.filter(Video.tipo == 'video')
     elif modo_vis == 'imagenes': query = query.filter(Video.tipo == 'imagen')
 
-    if not busqueda:
-        ids_ocultos = db.session.query(Video.id).join(Video.tags).filter(Tag.oculto == True)
-        query = query.filter(Video.id.notin_(ids_ocultos))
-    else:
+    # Procesar los tags primero
+    terminos = []
+    if busqueda:
         try:
             import json
             datos_tagify = json.loads(busqueda)
             terminos = [item['value'] for item in datos_tagify]
         except:
             terminos = busqueda.split()
-        
+
+    # Revisamos si el usuario está ingresando un tag oculto en el buscador
+    tag_oculto_buscado = None
+    for termino in terminos:
+        # Buscamos si algun tag introducido corresponde a un tag de la lista negra
+        tag_db = Tag.query.filter(Tag.nombre.ilike(termino), Tag.oculto == True).first()
+        if tag_db:
+            tag_oculto_buscado = tag_db #Se encontró el tag de la lista negra
+            break 
+
+    # Aplicamos el filtro de ocultar contenido
+    config_sensible = Configuracion.query.filter_by(clave='ocultar_sensible').first()
+    if config_sensible and config_sensible.valor == 'True':
+        if tag_oculto_buscado:
+            # Si se buscó el tag exacto, se muestran los videos con el tag
+            query = query.filter(or_(
+                ~Video.tags.any(Tag.oculto == True),
+                Video.tags.contains(tag_oculto_buscado)
+            ))
+        else:
+            # Si no se busco el tag oculto, no se muestra nada que lo contenga
+            query = query.filter(~Video.tags.any(Tag.oculto == True))
+
+    # Continuamos buscando tags normalmente
+    if terminos:
         if modo_busqueda == 'and':
             for termino in terminos:
                 query = query.filter(or_(Video.titulo.ilike(f'%{termino}%'), Video.tags.any(Tag.nombre.ilike(f'%{termino}%'))))
@@ -136,29 +174,86 @@ def construir_query_busqueda(busqueda, modo_busqueda, modo_vis, orden):
             query = query.filter(or_(*condiciones))
         query = query.distinct()
 
-    # --- LOGICA DE ORDENAMIENTO
+    # aqui se ordenan las cosas
     if orden == 'alfabetico':
         query = query.order_by(Video.titulo.asc())
     else:
-        query = query.order_by(Video.id.desc()) # Por defecto: Más recientes primero
+        query = query.order_by(Video.id.desc())
         
     return query
 
+# ------------------------------------ GUARDIAN
+@app.before_request
+def guardian_de_seguridad():
+    # Evitar errores si la ruta no existe
+    if not request.endpoint:
+        return
+        
+    # 1 Rutas que siempre deben estar libres
+    rutas_libres = ['static', 'config.login']
+    if request.endpoint in rutas_libres:
+        return
 
+    # 2 Si el usuario ya metió la clave, tiene acceso a todo, lo dejamos pasar
+    if session.get('admin_logged_in'):
+        return
+
+    # 3 Leer qué bloqueos están activos en la BD
+    configs = {c.clave: c.valor for c in Configuracion.query.all()}
+    b_general = configs.get('bloqueo_general') == 'True'
+    b_explorar = configs.get('bloqueo_explorar') == 'True'
+    b_config = configs.get('bloqueo_configuraciones') == 'True'
+    b_sensible = configs.get('ocultar_sensible') == 'True'
+
+    # 4 Aplicar bloqueo a los videos en general
+    if request.endpoint == 'stream_video':
+        if b_general and not session.get('admin_logged_in'):
+            return "Acceso denegado", 403
+        
+    if b_general:
+        session['next_url'] = request.url # Guardamos la URL intentada
+        return redirect(url_for('config.login'))
+
+    if b_explorar and request.endpoint == 'explorar_tags': 
+        session['next_url'] = request.url
+        return redirect(url_for('config.login'))
+
+    if b_config and request.endpoint.startswith('config.'):
+        session['next_url'] = request.url
+        return redirect(url_for('config.login'))
+
+    # 5 Bloqueo de tags ocultos
+    if b_sensible:
+        q = request.args.get('q')
+        if q:
+            try:
+                import json
+                datos_tagify = json.loads(q)
+                terminos = [item['value'] for item in datos_tagify]
+            except:
+                terminos = q.split() 
+            
+            for termino in terminos:
+                tag_prohibido = Tag.query.filter(Tag.nombre.ilike(termino), Tag.oculto == True).first()
+                if tag_prohibido:
+                    if not session.get('admin_logged_in'):
+                        session['next_url'] = request.url # Guardamos la búsqueda para completarla luego del login
+                        return redirect(url_for('config.login'))
 
 
 # ---------------------------------------------> RUTAS <---
 
 @app.route('/cambiar_modo')
 def cambiar_modo():
-    # Atrapamos lo que el usuario eligió en el nuevo desplegable
+    # Lo que diga el menu desplegable se recibe aqui
     modo_elegido = request.args.get('modo_visualizacion')
     
     if modo_elegido in ['videos', 'imagenes', 'todos']:
         session['modo_visualizacion'] = modo_elegido
         
     return redirect(url_for('inicio'))
-# ---------------------------------------------- PAGINA: PRINCIPAL
+
+# ---------------------------------------------- PRINCIPAL
 @app.route('/', methods=['GET'])
 def inicio():
     page = request.args.get('page', 1, type=int)
@@ -171,10 +266,10 @@ def inicio():
     config_modo = Configuracion.query.filter_by(clave='modo_miniaturas').first()
     modo_actual = config_modo.valor if config_modo else 'dinamico'
     
-    # Usamos la función ayudante
+    # Usamos la funcion playlists
     query = construir_query_busqueda(busqueda, modo_busqueda, modo_vis, orden)
     
-    # eN per_page=50 puedes cambiar cuántos resultados quieres por página
+    # eN per_page=50 puedes cambiar cuantos resultados quieres por pagina
     paginacion = query.paginate(page=page, per_page=50, error_out=False)
     todos_los_tags = Tag.query.filter_by(oculto=False).all()
     
@@ -204,26 +299,26 @@ def api_tags():
 def ver_video(id_video):
     video = Video.query.get_or_404(id_video)
     
-    # Recuperamos el contexto de cómo llegó el usuario aquí (se recupera desde el link)
-    # Se usa para hacer la "playlist" y así saber qué videos van antes y después del actual
+    # Recuperamos el contexto de cómo llegó el usuario aquí (se recupera desde la url)
+    # Se usa para hacer la "playlist" y así saber qué videos van antes y después del video presentado
     q = request.args.get('q', '')
     modo_busqueda = request.args.get('modo_busqueda', 'and')
     orden = request.args.get('orden', 'id_desc')
     modo_vis = session.get('modo_visualizacion', 'videos')
     
-    # 2. Reconstruimos la "Playlist" virtual (solo sac los IDs y hace que la url se vea fea)
+    # Reconstruimos la "playlist" virtual 
     query_playlist = construir_query_busqueda(q, modo_busqueda, modo_vis, orden)
     resultados = query_playlist.with_entities(Video.id).all()
     lista_ids = [r[0] for r in resultados]
     
-    # 3. Averiguamos quién está antes y quién después
+    # Averiguamos quien esta antes y quién despues
     prev_id, next_id = None, None
     if id_video in lista_ids:
         indice = lista_ids.index(id_video)
         if indice > 0: prev_id = lista_ids[indice - 1]
         if indice < len(lista_ids) - 1: next_id = lista_ids[indice + 1]
 
-    # Pasamos todo esto a la plantilla
+    # Pasamos todo esto al html
     return render_template('ver_video.html', video=video, prev_id=prev_id, next_id=next_id, q=q, modo_busqueda=modo_busqueda, orden=orden)
 
 
@@ -272,10 +367,21 @@ def stream_video(id_video):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # --- configuraciones por defecto para la tabla miniaturas
-        config_miniaturas = Configuracion.query.filter_by(clave='modo_miniaturas').first()
-        if not config_miniaturas:
-            config_inicial = Configuracion(clave='modo_miniaturas', valor='dinamico')
-            db.session.add(config_inicial)
-            db.session.commit()
-    app.run(debug=True, port=5000, host='0.0.0.0')
+        
+        # Lista de ajustes predeterminados (solo se ejecuta la primera vez que abres el server)
+        ajustes_defecto = {
+            'modo_miniaturas': 'dinamico',
+            'pass_maestra': '',             
+            'bloqueo_general': 'False',
+            'bloqueo_explorar': 'False',    
+            'bloqueo_configuraciones': 'False',
+            'ocultar_sensible': 'False'
+        }
+        
+        for clave, valor in ajustes_defecto.items():
+            if not Configuracion.query.filter_by(clave=clave).first():
+                nueva_config = Configuracion(clave=clave, valor=valor)
+                db.session.add(nueva_config)
+                
+        db.session.commit()
+    app.run(debug=True, port=9090, host='0.0.0.0')

@@ -1,25 +1,22 @@
 venv/
 env/
 
-instance/
+GhostubeDATA/instance/
 *.db
 *.sqlite3
 
-instalacion/
+GhostubeDATA/instalacion/
 
 GhostubeDATA/extenzzziones/*.exe
-extenzzziones/
-*.exe
+GhostubeDATA/extenzzziones/FFMPEG-LICENSE.txt
 
-__pycache__/
+GhostubeDATA/__pycache__/
 *.pyc
 
 # Archivos de sistema operativo
 .DS_Store
 Thumbs.db
 
-miniaturas/
-*.jpg
-*.jpeg
-*.gif
+GhostubeDATA/static/miniaturas/
+
 

@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/conf_icon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="{{ url_for('static', filename='css/tagify.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ url_for('static', filename='js/tagify.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
     <style>
         body { color:#eee; font-family:sans-serif; padding:20px; max-width:800px; margin:0 auto; }
         h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #ffffff; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #333; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #423e3e; }
         .contenedor_resaltado {height: 60px; overflow: hidden; width: 100%; background-color: #221e1e; margin: 30px 0; position: relative;}
         .contenedor_resaltado.contraido { height: auto; }
         .texto_info {font-size: 0.9rem; color: #aaa;}
@@ -20,26 +22,43 @@
     </style>
 </head>
 <body>
-    <a href="/" class="botono_texto">← Volver al Cine  ||</a>
-    <a href="{{ url_for('config.logout') }}"  class="botono_texto">  Cerrar Sesión</a>
-    
-    <h1>⚙️ Configuraciones</h1>
+    <a href="#" onclick="regresarAlInicio(); return false;" class="botono_texto">⮌ Volver al cine&emsp;</a>
+    {% if session.get('admin_logged_in') %}
+        <span>||</span>
+        <a href="{{ url_for('config.logout') }}"  class="botono_texto">&emsp; Cerrar Sesión de Administrador</a>
+    {% endif %}
+    <br>
+    <div class="contenedorresponsivo" style="margin: 0; padding-bottom: 0;">
+        <img src="{{ url_for('static', filename='img/conf_icon.png') }}" style="width: 2em; height: auto;"> <span><h1> Configuraciones</h1></span>
+    </div>
 
-    <div class="contenedor_resaltado">
-    <h2>📂 Gestión de Carpetas</h2> <button class="botono absoluto">▼</button>
+    <div class="contenedor_resaltado contraido">
+    <h2>📂 Agrega tus carpetas</h2> <button class="botono absoluto">▼</button>
     <p class="texto_info">
-        Aquí puedes gestionar las carpetas que el servidor escanea para encontrar tus videos. 
-        <br>Agrega nuevas rutas, asigna colores y nombres personalizados, o desactiva las que no quieras usar temporalmente.
-        <br>La columna "quitar" solo quita la carpeta de la lista, no borra los archivos ni los registros de la base de datos, tienes que purgarlos (al final de esta pagina).
+        Aquí debes agregar las carpetas en donde están los videos o imagenes que quieres ver. 
     </p>
     <form action="{{ url_for('config.guardar_ubicaciones') }}" method="POST">
-        <table>
+        <h4>Agregar Nueva Carpeta</h4>
+        <p class="texto_info">
+            Aquí debes agregar las carpetas en donde están los videos o imagenes que quieres ver. 
+            <span style="color: #797272; margin-top: 10px;">
+                <br> Ejemplo de una ruta en windows: C:\Users\TuUsuario\Videos\Peliculas
+                <br> Ejemplo de una ruta en linux: /home/TuUsuario/Videos/Peliculas
+            </span>
+        </p>
+        <input type="text" name="nueva_ruta" placeholder="Pega aquí la ruta absoluta de tus carpetas" class="inputdetexto inputcien">
+        <button type="submit" class="botono inputcien" style="margin: 0 0;">Guardar Carpeta</button><br><br>
+
+        <p class="texto_info">
+            Asigna colores y nombres personalizados a las ubicaciones, desactiva las que no quieras usar temporalmente o borralas permanentemente.
+        </p>
+        <table style="background-color: #2e2828;">
             <thead>
                 <tr>
                     <th>Ruta</th>
                     <th>Sobrenombre</th>
                     <th>Color Etiqueta</th> <th>Activa</th>
-                    <th>Quitar</th>
+                    <th>Borrar</th>
                 </tr>
             </thead>
             <tbody>
@@ -74,66 +93,94 @@
                     </td>
                 </tr>
                 {% endfor %}
-                <tr>
-                    <h4>Agregar Nueva Carpeta</h4>
-                    <input type="text" name="nueva_ruta" placeholder="/ruta/absoluta/a/tus/videos" class="inputdetexto inputcien">
-                    <button type="submit" class="botono inputcien" style="margin: 0 0;">Guardar Carpeta</button><br><br>
-                </tr>
             </tbody>
         </table>
         <button type="submit" class="botono" style="width: 40%; margin-left: 30%;">Guardar activos y borrar marcados</button>
     </form>
     </div>
     <div class="contenedor_resaltado">
-    <h2>🎞️ Miniaturas</h2> <button class="botono absoluto">▼</button>
-    <p class="texto_info">
-        Aqui puedes cambiar la previsualizacion de los videos en la pagina de inicio. Entre el modo Clip y el modo Diapositivas.
-        <br> - El modo Clip te permite ver el video casi completo al pasar el Mouse por encima.
-        <br> - El modo Diapositivas te muestra 5 screenshots extraidos del video al pasar el Mouse por encima.
-        <br><br> ⚠️ Si no tienes FFmpeg instalado, el proceso de generacion no podrá crear screenshots del video. <br> Asegúrate de tener Ffmpeg instalado y agregado a tu PATH para poder usar el modo Diapositivas.
-        <br> <br><a href="https://youtu.be/0zN9oZ98ZgE?si=XfhevpWbnkTQCNVP" style="text-decoration: underline;"> Aprende a descargar FFmpeg </a>
-    </p>
-    <div class="contenedor_grisoscuro">
-        <h3>⚙️ Preferencias Visuales</h3>
-
-        <form action="{{ url_for('config.guardar_modo_visual') }}" method="POST" style="display: flex; align-items: center; gap: 15px;">
-
-            <label for="modo_miniaturas" style="color: #e0e0e0;">Modo de previsualizacion:</label>
-
-            <select name="modo_miniaturas" id="modo_miniaturas" class="botono2">
-                <option value="dinamico" {% if modo_actual == 'dinamico' %}selected{% endif %}>
-                    📽️ Video en vivo. (Clips)
-                </option>
-                <option value="estatico" {% if modo_actual == 'estatico' %}selected{% endif %}>
-                    📷 Screenshots del video. (Diapositivas)
-                </option>
-            </select>
-
-            <button type="submit" class="botono">
-                Guardar Cambio
-            </button>
-        </form>
-    </div>
-    <div class="contenedor_grisoscuro">
-        <h3>🖼️ Generar las miniaturas (FFmpeg)</h3>
+        <h2>🎬 Opciones de Videos</h2> <button class="botono absoluto">▼</button>
         <p class="texto_info">
-            Solo presiona este boton si cambiaste al modo <span style="color: #e7e7e7;">Diapositivas</span>. Esto generará miniaturas en segundo plano.
+            Aqui puedes cambiar la previsualizacion de los videos en la pagina de inicio. Entre el modo Clip y el modo Diapositivas.
+            <br> - El modo Clip te permite ver el video casi completo al pasar el Mouse por encima (Es más lento).
+            <br> - El modo Diapositivas te muestra 5 screenshots extraidos del video al pasar el Mouse por encima (Consume más espacio).
+            <br><br> ⚠️ Estas configuraciones dependen de ffmpeg y ffprobe
+            <br> <br><a href="{{ url_for('informacion', _anchor='ffmpeg') }}" style="text-decoration: underline;"> Instalar FFmpeg </a>
         </p>
-        
-        <form action="{{ url_for('config.generar_miniaturas_masivas') }}" method="POST">
-            <button type="submit" class="botono" >
-                ▶ Iniciar Generación de Screenshots
-            </button>
-        </form>
-        <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
-            *Nota: Las screenshots de tus videos se guardaran en la carpeta Ghostube/GhostubeDATA/static/miniaturas/
-        </p>
-    </div>
+        <div class="contenedor_grisoscuro">
+            <h3>🎞️ Modo de Miniaturas</h3>
+
+            <form action="{{ url_for('config.guardar_modo_visual') }}" method="POST" style="display: flex; align-items: center; gap: 15px;">
+
+                <label for="modo_miniaturas" style="color: #e0e0e0;">Modo de previsualizacion:</label>
+
+                <select name="modo_miniaturas" id="modo_miniaturas" class="botono2">
+                    <option value="dinamico" {% if modo_actual == 'dinamico' %}selected{% endif %}>
+                        📽️ Previsualizacion en video. (Clips)
+                    </option>
+                    <option value="estatico" {% if modo_actual == 'estatico' %}selected{% endif %}>
+                        📷 Screenshots del video. (Diapositivas)
+                    </option>
+                </select>
+
+                <button type="submit" class="botono">
+                    Guardar modo
+                </button>
+            </form>
+        </div>
+        <div class="contenedor_grisoscuro">
+            <h3>🖼️ Generar las miniaturas (FFmpeg)</h3>
+            <p class="texto_info">
+                Solo presiona este boton si cambiaste al modo <span style="color: #e7e7e7;">Diapositivas</span>. Esto generará miniaturas en segundo plano, puedes seguir usando el servidor, tus miniaturas estaran listas en unos minutos.
+            </p>
+
+            <form action="{{ url_for('config.generar_miniaturas_masivas') }}" method="POST">
+                <button type="submit" class="botono" >
+                    ▶ Iniciar Generación de Diapositivas
+                </button>
+            </form>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
+                *Nota: Las screenshots de tus videos se guardaran en la carpeta Ghostube/GhostubeDATA/static/miniaturas/
+            </p>
+        </div>
+        <div class="contenedor_grisoscuro">
+            <h3> ⏲️ Calcular la duracion de los videos (FFprobe)</h3>
+            <p class="texto_info">
+                Si tus videos no muestran su duracion en las miniaturas y en cambio muestran la palabra "Video"
+            </p>
+            <form action="{{ url_for('config.recalcular_duraciones') }}" method="POST">
+                <button type="submit" class="botono">
+                    ↺ Recalcular Duraciones Fallidas
+                </button>
+            </form>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
+                Este fallo se dá por que no se pudo encontrar ffprobe.exe en la carpeta "extenzzziones", usa este boton para recalcular las duraciones despues de descargar ffprobe.exe
+            </p>
+        </div>
+        <div class="contenedor_grisoscuro">
+            <h3> 🗑️ Borrar las Miniaturas (Diapositivas) </h3>
+            <p class="texto_info">
+                Elimina todas las miniaturas generadas por el modo "Diapositivas".
+            </p>
+            <form action="{{ url_for('config.borrar_miniaturas') }}" method="POST" onsubmit="return confirm('Si lo que necesitas es que NO se vuelvan a generar las miniaturas: \nAsegurate de activar el modo Clips');">
+                <button type="submit" class="botono">
+                    <p>ඞ Borrar Todas las Miniaturas</p>
+                </button>
+            </form>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
+                Esto arregla algunos problemas donde las miniaturas no estan en el video al que corresponden, 
+                o tambien puedes borrarlas solo para liberar espacio.
+            </p>
+        </div>
     </div>
 
 
-{% if not carpetas_detectadas %} <div class="contenedor_resaltado"> {% endif %}
-{% if carpetas_detectadas %} <div class="contenedor_resaltado contraido"> {% endif %}
+    {% if not carpetas_detectadas %} 
+    <div class="contenedor_resaltado"> 
+    {% endif %}
+    {% if carpetas_detectadas %} 
+    <div class="contenedor_resaltado contraido"> 
+    {% endif %}
     <h2>🏷️ Etiquetas</h2>
     <div class="contenedor_grisoscuro">
         <h3>📂 Auto-Etiquetado por Carpetas</h3> 
@@ -167,6 +214,7 @@
                         <div style="margin-top: 3px; text-align: left; width: auto;"> 
                             {{ carpeta.ruta | replace('/', '/<wbr>') | replace('\\', '\\<wbr>') | safe }} 
                         </div>
+                        <input type="hidden" name="rutas_carpeta" value="{{ carpeta.ruta }}">
                         <input type="text" name="nombres_tags" class="tagify-masivo" placeholder="Ej: Vacaciones, Peliculas, Terror..." style="width: auto;">
 
                     </div>
@@ -222,10 +270,10 @@
         <form action="{{ url_for('config.guardar_tags') }}" method="POST">
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
                 {% for tag in tags %}
-                <div class="botono2" style="width: auto;">
+                <label class="botono2" style="width: auto; cursor: pointer;">
                     <input type="checkbox" name="oculto_{{ tag.id }}" {% if tag.oculto %}checked{% endif %}>
                     {{ tag.nombre }}
-                </div>
+                </label>
                 {% endfor %}
             </div>
             <br>
@@ -235,14 +283,56 @@
 </div>
 
 
+<div class="contenedor_resaltado">
+    <h2 > 🔒 Seguridad </h2> <button class="botono absoluto">▼</button>
+    
+    <form action="{{ url_for('config.guardar_seguridad') }}" method="POST">
+        <div class="contenedor_grisoscuro">
+        <div style="margin-bottom: 20px;">
+            <h3>Establecer nueva contraseña:</h3>
+            <input type="password" name="pass_maestra" placeholder="Escribe para cambiar la contraseña..." class="inputdetexto ">
+            <p class="texto_info">Nota: Déjalo en blanco si no quieres cambiar la contraseña actual.
+                <br> Advetrtencia: Las contraseñas están encriptadas, asegurate de no olvidarla o no nos volveremos a ver.
+            </p>
+        </div></div>
 
+        <div class="contenedor_grisoscuro" style="text-align: left;">
+            <h3 style="text-align: center;">Opciones de Bloqueo:</h3>
+            <p class="texto_info">Para usuarios que comparten su servidor con otras personas, 
+                estas opciones permiten bloquear el acceso a ciertas partes del servidor gracias a una contraseña.</p>
+            <label style="cursor: pointer;">
+                <input type="checkbox" name="bloqueo_general" {% if b_general %}checked{% endif %}>
+                &ensp;&ensp;Bloquear TODO (No se podra usar el servidor sin iniciar sesión)
+            </label>
+            
+            <label style="cursor: pointer;">
+                <input type="checkbox" name="bloqueo_explorar" {% if b_explorar %}checked{% endif %}>
+                &ensp;&ensp;Bloquear la página "Explorar Tags" 
+            </label>
+            
+            <label style="cursor: pointer;">
+                <input type="checkbox" name="bloqueo_configuraciones" {% if b_config %}checked{% endif %}>
+                &ensp;&ensp;Bloquear este panel de Configuraciones
+            </label>
+            
+            <label style="cursor: pointer;">
+                <input type="checkbox" name="ocultar_sensible" {% if b_sensible %}checked{% endif %}>
+                &ensp;&ensp;Bloquear el acceso a los tags ocultos (Lista Negra de Tags)
+            </label>
+        </div>
+
+        <button type="submit" style="margin-top: 20px; padding: 10px 20px; background-color: #ff5252; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+            Guardar Seguridad
+        </button>
+    </form>
+</div>
 
 <div class="contenedor_resaltado">
     <h2 style="color: #FFC107;">🧹 Mantenimiento</h2> <button class="botono absoluto">▼</button>
     <div class="contenedor_grisoscuro">
         
         <p style="margin-top:0;">
-            <strong>Limpieza de Base de Datos:</strong><br>
+            <h3>Limpieza de TAGS:</h3><br>
             <span class="texto_info">
             Esto eliminará las etiquetas que no se usan en ningún video (tags huérfanos) 
             y compactará el archivo de base de datos para ahorrar espacio.
@@ -251,7 +341,7 @@
         
         <form action="{{ url_for('config.limpiar_basura') }}" method="POST">
             <button type="submit" class="botono" style="background-color: #FF9800; color: black; font-weight: bold;">
-                ♻️ Ejecutar Limpieza Profunda
+                ♻ Ejecutar Limpieza de Tags
             </button>
         </form>
     </div>
@@ -261,7 +351,7 @@
     <hr style="border-color: #444; margin: 20px 0;">
     <div class="contenedor_grisoscuro">
         <p style="margin-top:0;">
-            <strong>🧨 Purgar Base de Datos (Rutas eliminadas):</strong><br>
+            <h3>🧨 Purgar Rutas eliminadas (De la base de datos)</h3><br>
             <span class="texto_info">
             Si borraste una carpeta recientemente o desconectaste un disco duro, sus videos siguen registrados en la base de datos de este servidor. 
             Este botón eliminará los registros de esos videos para que no consuman espacio en la base de datos. 
@@ -271,7 +361,7 @@
         </p>
         <form action="{{ url_for('config.purgar_db') }}" method="POST">
             <button type="submit" class="botono" style="background-color: #D32F2F; color: white; font-weight: bold; width: 90%; margin-left: 5%;">
-                ☠️ PURGAR VIDEOS HUÉRFANOS
+                ☠︎︎ PURGAR VIDEOS HUÉRFANOS
             </button>
         </form>
     </div>
@@ -280,18 +370,37 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Seleccionamos todos los botones que tengan la clase 'absoluto'
+        // Selecciona todos los botones que tengan la clase -absoluto-
         const botones = document.querySelectorAll(".absoluto");
 
-        botones.forEach(boton => {
-            boton.addEventListener("click", function() {
-                // closest() busca hacia arriba en el HTML hasta encontrar el contenedor que lo envuelve
-                const contenedor = this.closest(".contenedor_resaltado");
+        botones.forEach((boton, index) => {
+            // closest() busca hacia arriba el contenedor
+            const contenedor = boton.closest(".contenedor_resaltado");
 
-                if (contenedor) {
-                    contenedor.classList.toggle("contraido");
+            if (contenedor) {
+                // Busca si existe un registro previo para este panel
+                const estadoGuardado = localStorage.getItem('panel_contraido_' + index);
+                
+                // Si la memoria dice que estaba expandido, le pone la clase (nnombrada incorrectamente, una disculpa)
+                if (estadoGuardado === 'true') {
+                    contenedor.classList.add("contraido");
+                } 
+                // Si la memoria dice que estaba contraido, lo contrae
+                else if (estadoGuardado === 'false') {
+                    contenedor.classList.remove("contraido");
                 }
-            });
+
+                boton.addEventListener("click", function() {
+                    // Alternar la clase
+                    contenedor.classList.toggle("contraido");
+                    
+                    // Revisar si quedó con la clase o sin la clase
+                    const estaContraido = contenedor.classList.contains("contraido");
+                    
+                    // Guardar el estado booleano en la libreta del navegador
+                    localStorage.setItem('panel_contraido_' + index, estaContraido);
+                });
+            }
         });
     });
 </script>

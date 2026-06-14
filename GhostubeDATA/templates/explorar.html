@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/tags_icon.png') }}">
     <title>Explorar Colección</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
     
 </head>
 <body>
 
     <!-- Botón para regresar a la cuadrícula principal -->
-    <div style="position: absolute; top: 20px; left: 20px;">
-        <a href="{{ url_for('inicio') }}" class="botono_texto">← Volver al inicio</a>
-    </div>
+        <a href="#" onclick="regresarAlInicio(); return false;" class="botono_texto">⮌ Volver al cine&emsp;</a>
+    
 
-    <h1>🏷️ Explorar Etiquetas</h1>
+    <div class="contenedorresponsivo" style="margin: 0; padding-bottom: 0;">
+        <img src="{{ url_for('static', filename='img/tags_icon.png') }}" style="width: 3em; height: auto;"> <span><h1> Explorar Etiquetas </h1></span>
+    </div>
 
     <!-- SECCIÓN DE BÚSQUEDA -->
     <div class="contenedor_grisoscuro" style="margin-bottom: 40px;">

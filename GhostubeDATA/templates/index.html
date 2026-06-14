@@ -56,7 +56,11 @@
 <body>
 
     <div class="conten_titulogo" > <a href="{{ url_for('inicio') }}">
+        {% if session.get('admin_logged_in') %}
+        <img  class="titulogo" src="{{ url_for('static', filename='img/Ghostadmin_logo.png') }}" alt="Ghostube" style="width: 30vw; min-width: 150px; height: auto;">
+        {% else %}
         <img  class="titulogo" src="{{ url_for('static', filename='img/Ghostube_logo.png') }}" alt="Ghostube" style="width: 30vw; min-width: 150px; height: auto;">
+        {% endif %}
     </a></div>
     <div style="text-align: center; margin-bottom: 30px;">
         <div style="text-align: center; margin: 20px 0;">
@@ -151,7 +155,19 @@
         {% endif %}
     </div>
     <div style="width: 80vw; outline: 1px solid #503e3e; left: 10vw; position: absolute;"></div><br>
+
+    <!-- Esto es el mensaje de "agrega un video"-->
+    {% if paginacion.pages == 0 %}
+    <div class="contenedor_grisoscuro" style="background-color: transparent;">
+        <img src="{{ url_for('static', filename='img/fantasmita/confused.png') }}" style="width: 15vw; min-width: 150px; height: auto;">
+        <p class="texto_info">
+            No sé donde encontrar tus videos... ¿Por que no me dices donde buscar? <a href="{{ url_for('config.panel') }}" style="text-decoration: underline;"> Haz clic aquí </a>
+        </p>
+    </div>
+    {% endif %}
+
     <div class="grid-videos">
+        <!-- Esto se repite por cada video, son las tarjetas que incluyen miniaturas, duracion, titulo y tags -->
         {% for video in paginacion.items %}
         <a href="{{ url_for('ver_video', id_video=video.id, q=busqueda, modo_busqueda=modo_busqueda, orden=orden) }}">
             <div class="tarjeta">
@@ -210,6 +226,7 @@
         </a>
         {% endfor %}
     </div>
+    
 
 <div class="contenedor_grisoscuro numeros_autoorden">
     
@@ -256,6 +273,52 @@
     {% endif %}
     
 </div>
+
+
+<!-- Pequeños mensajitos para la cantidad de videos-->
+    {% if 1 <= paginacion.pages <= 2 %}
+    <!-- Encontre algo -->
+    <div class="contenedor_grisoscuro" style="background-color: transparent;">
+        <img src="{{ url_for('static', filename='img/fantasmita/happy.png') }}" style="height: 5vw; min-height: 100px; width: auto;">
+        <p class="texto_info">
+            ¡He encontrado un par de archivos! Son suficientes para empezar a disfrutar de tu propio cine.
+        </p>
+    </div>
+    {% elif 3 <= paginacion.pages <= 29 %}
+    <!-- Sigue asi -->
+    <div class="contenedor_grisoscuro" style="background-color: transparent;">
+        <img src="{{ url_for('static', filename='img/fantasmita/hi.png') }}" style="height: 5vw; min-height: 100px; width: auto;">
+        <p class="texto_info">
+            ¡Se vé que le estás dando buen uso a tu servidor! Sigue así.
+        </p>
+    </div>
+    {% elif 30 <= paginacion.pages <= 69 %}
+    <!-- Palomero -->
+    <div class="contenedor_grisoscuro" style="background-color: transparent;">
+        <img src="{{ url_for('static', filename='img/fantasmita/palmolitas.png') }}" style="height: 5vw; min-height: 100px; width: auto;">
+        <p class="texto_info">
+            ¡Esto es una gran biblioteca! Es hora de ver algo.
+        </p>
+    </div>
+    {% elif 70 <= paginacion.pages <= 99 %}
+    <!-- Anda la osa -->
+    <div class="contenedor_grisoscuro" style="background-color: transparent;">
+        <img src="{{ url_for('static', filename='img/fantasmita/o.png') }}" style="height: 5vw; min-height: 100px; width: auto;">
+        <p class="texto_info">
+            ¡Anda la osa! Son muchisímos archivos.
+        </p>
+    </div>
+    {% elif paginacion.pages >= 100 %}
+    <!-- ok. -->
+    <div class="contenedor_grisoscuro" style="background-color: transparent;">
+        <img src="{{ url_for('static', filename='img/fantasmita/que.png') }}" style="height: 5vw; min-height: 100px; width: auto;">
+        <p class="texto_info">
+            Son demasiados archivos...
+        </p>
+    </div>
+    {% endif %}
+
+
 
 <script>
     // ESTE SCRIPT SOLO HACE QUE CADA PREVISUALIZACION DE VIDEO CARGUE CUANDO ENTRA EN PANTALLA
@@ -362,6 +425,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
 
 </script>
+<script>
+    // Guarda la URL exacta de la página principal/búsqueda actual en la memoria de esta pestaña
+    sessionStorage.setItem('ultima_ruta_inicio', window.location.href);
+</script>
+
 
 
 </body>

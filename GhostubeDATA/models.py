@@ -29,8 +29,7 @@ class Video(db.Model): # es el video en sí, con su título, ruta, duración y a
     tipo = db.Column(db.String(10), default='video') 
     
     ubicacion_id = db.Column(db.Integer, db.ForeignKey('ubicacion.id'), nullable=True)
-    ubicacion = db.relationship('Ubicacion', backref=db.backref('videos', lazy=True))
-    
+    ubicacion = db.relationship('Ubicacion', backref=db.backref('videos', lazy=True, cascade="all, delete-orphan"))
     tags = db.relationship('Tag', secondary='video_tags', backref=db.backref('videos', lazy=True))
 
 class Tag(db.Model): #etiquetas

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-
+from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, Ubicacion, Tag, Video, Configuracion
 import os
 import platform
@@ -9,8 +9,6 @@ from flask import current_app
 
 config_bp = Blueprint('config', __name__)
 
-# CONTRASEÑA DEL MODO CONFIGURACION (Cámbiala aquí)
-CONTRASENA_ADMIN = "1234"
 
 # ----------------------------------------------------- Ver si esto es windos o linus pa usar ffmpeg
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -28,25 +26,74 @@ else:
 def login():
     if request.method == 'POST':
         password = request.form.get('password')
-        if password == CONTRASENA_ADMIN:
-            session['admin_logged_in'] = True
-            return redirect(url_for('config.panel'))
+        config_pass = Configuracion.query.filter_by(clave='pass_maestra').first()
+        
+        if not config_pass or not config_pass.valor or check_password_hash(config_pass.valor, password):
+            session['admin_logged_in'] = True 
+            
+            # Leemos si el guardian dejo anotada una ruta. 'pop' la lee y la borra de la memoria.
+            ruta_pendiente = session.pop('next_url', None)
+            
+            if ruta_pendiente:
+                return redirect(ruta_pendiente) # Te manda a donde querias ir
+            else:
+                return redirect(url_for('inicio')) # Si no habia ruta, te manda al inicio
         else:
-            return "Contraseña incorrecta <a href='/login'>Intentar de nuevo</a>"
+            return "Contraseña incorrecta <br><br> <a href='/login'>Intentar de nuevo</a>"
+            
     return render_template('login.html')
+
+
+
+
+# -----------------------------------------------------panel
 
 @config_bp.route('/panel')
 def panel():
-    # Protección: Si no está logueado, mandar al login
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('config.login'))
     
     ubicaciones = Ubicacion.query.all()
     tags = Tag.query.all()
-    config_modo = Configuracion.query.filter_by(clave='modo_miniaturas').first()
-    modo_actual = config_modo.valor if config_modo else 'dinamico'
+    
+    # 1. Leer todas las configuraciones para enviarlas al HTML
+    configs = {c.clave: c.valor for c in Configuracion.query.all()}
+    
+    return render_template('configuraciones.html', 
+                           ubicaciones=ubicaciones, 
+                           tags=tags,
+                           modo_actual=configs.get('modo_miniaturas', 'dinamico'),
+                           b_general=configs.get('bloqueo_general') == 'True',
+                           b_explorar=configs.get('bloqueo_explorar') == 'True',
+                           b_config=configs.get('bloqueo_configuraciones') == 'True',
+                           b_sensible=configs.get('ocultar_sensible') == 'True')
 
-    return render_template('configuraciones.html', modo_actual=modo_actual, ubicaciones=ubicaciones, tags=tags)
+# -----------------------------------------------------seguridad
+
+@config_bp.route('/guardar_seguridad', methods=['POST'])
+def guardar_seguridad():
+    
+    # Guardar o actualizar la contraseña
+    nueva_pass = request.form.get('pass_maestra')
+    if nueva_pass:
+        config_pass = Configuracion.query.filter_by(clave='pass_maestra').first()
+        # Encriptamos la contraseña antes de guardarla
+        config_pass.valor = generate_password_hash(nueva_pass)
+
+    # Guardar los interruptores (Checkboxes nativos)
+    opciones_seguridad = {
+        'bloqueo_general': 'True' if request.form.get('bloqueo_general') == 'on' else 'False',
+        'bloqueo_explorar': 'True' if request.form.get('bloqueo_explorar') == 'on' else 'False',
+        'bloqueo_configuraciones': 'True' if request.form.get('bloqueo_configuraciones') == 'on' else 'False',
+        'ocultar_sensible': 'True' if request.form.get('ocultar_sensible') == 'on' else 'False'
+    }
+
+    for clave, nuevo_valor in opciones_seguridad.items():
+        config_db = Configuracion.query.filter_by(clave=clave).first()
+        if config_db:
+            config_db.valor = nuevo_valor
+            
+    db.session.commit()
+    return redirect(url_for('config.panel'))
+
 
 @config_bp.route('/logout')
 def logout():
@@ -58,19 +105,11 @@ def logout():
 # Gestión de Carpetas (Sobrenombres y Activar/Desactivar/Agregar)
 @config_bp.route('/guardar_ubicaciones', methods=['POST'])
 def guardar_ubicaciones():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
-
-    # Agregar una nueva carpeta
-    nueva_ruta = request.form.get('nueva_ruta')
-    if nueva_ruta and os.path.exists(nueva_ruta):
-        nombre_defecto = os.path.basename(nueva_ruta)
-        nueva_ubi = Ubicacion(ruta=nueva_ruta, nombre=nombre_defecto)
-        db.session.add(nueva_ubi)
 
     # Editar una carpeta existente
     ubicaciones = Ubicacion.query.all()
     for ubi in ubicaciones:
-        # Actualizar nombre de la carpetasdfg
+        # Actualizar nombre de las carpetasd
         nuevo_nombre = request.form.get(f'nombre_{ubi.id}')
         if nuevo_nombre:
             ubi.nombre = nuevo_nombre
@@ -88,13 +127,19 @@ def guardar_ubicaciones():
         if request.form.get(f'borrar_{ubi.id}') == 'on':
             db.session.delete(ubi)
 
+    # Agregar una nueva carpeta
+    nueva_ruta = request.form.get('nueva_ruta')
+    if nueva_ruta and os.path.exists(nueva_ruta):
+        nombre_defecto = os.path.basename(nueva_ruta)
+        nueva_ubi = Ubicacion(ruta=nueva_ruta, nombre=nombre_defecto, activa=True)
+        db.session.add(nueva_ubi)
+
     db.session.commit()
     return redirect(url_for('config.panel'))
 
 # ----------------------------------------------------- LISTA NEGRA DE TAGS
 @config_bp.route('/guardar_tags', methods=['POST'])
 def guardar_tags():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
     
     tags = Tag.query.all()
     for tag in tags:
@@ -108,7 +153,6 @@ def guardar_tags():
 # ----------------------------------------------------- MANTENIMIENTO DE LA BDD 
 @config_bp.route('/limpiar_basura', methods=['POST'])
 def limpiar_basura():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
     
     # Borrar Tags Huérfanos
     tags = Tag.query.all()
@@ -131,30 +175,48 @@ def limpiar_basura():
     
     return redirect(url_for('config.panel'))
 # ----------------------------------------------------- PURGAR VIDEOS
-# Esto sirve para eliminar de la base de datos los videos que ya no existen en el disco duro
-# Cuando borras una carpeta completa, el server piensa que solo desconectaste una usb con esa carpeta, así que deja los datos de esos videos en la BDD
-# Con esta funcion eliminas definitivamente todos los videos que no se encuentren en este momento, no importa si es por que la unidad de almacenamiento externa esta desconectada, elimina todo lo relacionado de la base de datos
-# No voy a mejorar esto
+# Cuando borras una carpeta completa, o desconectas una usb, el server piensa 
+# "probablemente solo no puedo acceder a los datos temporalmente", así que deja los datos de esos videos en la BDD, 
+# por si vuelven a aparecer algun dia.
+# Con esta funcion eliminas definitivamente todos los videos que no se encuentren en este momento, 
+# no importa si es por que la unidad de almacenamiento externa esta desconectada, 
+# elimina todo lo relacionado de la base de datos.
+# ----------------------------------------------------- PURGAR VIDEOS
 @config_bp.route('/purgar_db', methods=['POST'])
 def purgar_db():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
+    import os
     
-    # Buscamos videos que NO tienen ubicacion asignada -ubicacion_id es NULL-
-    # Esto pasa cuando borraste la carpeta de la lista de configuraciones
-    videos_huerfanos = Video.query.filter(Video.ubicacion_id == None).all()
+    carpetas_borradas = 0
+    videos_borrados = 0
     
-    cantidad = len(videos_huerfanos)
-    
-    for video in videos_huerfanos:
-        db.session.delete(video)
-        
+    # ---- Limpia Carpetas y USBs desconectados
+    # Revisamos todas las ubicaciones registradas
+    ubicaciones = Ubicacion.query.all()
+    for ubi in ubicaciones:
+        if not os.path.exists(ubi.ruta):
+            # Si la ruta ya no existe (USB desconectado o carpeta borrada), se borra.
+            db.session.delete(ubi)
+            carpetas_borradas += 1
+            
+    # Guardamos los cambios de esta eliminacion de carpetas antes de pasar a la eliminacion individual
     db.session.commit()
     
-    # Ejecutamos un VACUuM  para recuperar el espacio
+    # ---- Limpia videos solitos
+    # Revisa si se desaparecio un archivo MP4 en tu sistema, pero la carpeta sigue ahi
+    videos = Video.query.all()
+    for video in videos:
+        # También se limpian los videos huerfanos en general
+        if not video.ubicacion_id or not os.path.exists(video.ruta_completa):
+            db.session.delete(video)
+            videos_borrados += 1
+            
+    db.session.commit()
+    
+    # ---- Ejecutamos un VACUUM para exprimir el archivo .db y hacerlo pesar menos
     db.session.execute(db.text("VACUUM"))
     db.session.commit()
     
-    print(f"--- PURGA COMPLETA: Se eliminaron {cantidad} videos de rutas inexistentes. ---")
+    print(f"--- PURGA COMPLETA: {carpetas_borradas} carpetas no encontradas y {videos_borrados} videos inexistentes eliminados.")
     
     return redirect(url_for('config.panel'))
 
@@ -163,7 +225,6 @@ def purgar_db():
 
 @config_bp.route('/detectar_carpetas', methods=['GET'])
 def detectar_carpetas():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
     
     # ---Extensiones para saber si una carpeta vale la pena mostrarla
     # avi solo está acá para joder, algunos usuarios tienen películas en ese formato, como mi padre
@@ -182,17 +243,17 @@ def detectar_carpetas():
         
         # os.walk recorre todo el arbol de directorios
         for raiz, carpetas, archivos in os.walk(ubi.ruta):
-            # Contamos cuantos archivos multimedia hay en ESTA carpeta (sin contar la subcarpetas dentro)
+            # se cuentan cuantos archivos multimedia hay en ESTA carpeta (sin contar la subcarpetas dentro)
             cantidad = sum(1 for f in archivos if f.lower().endswith(ext_validas))
             
             if cantidad > 0:
-                # Si la carpeta tiene multimedia valido, la agregamos a la lista
+                # Si la carpeta tiene multimedia valido, la agrega a la lista
                 lista_carpetas.append({
                     'ruta': raiz,
                     'cantidad': cantidad
                 })
     
-    # Ordenamos alfabéticamente para que sea fácil de leer
+    # Ordenamos alfabeticamente para que sea facil de leer
     lista_carpetas.sort(key=lambda x: x['ruta'])
     
     # Renderizamos la misma página pero enviándole esta lista nueva
@@ -204,7 +265,6 @@ def detectar_carpetas():
 # ----------------------------------------------------- AUTOTAGS MASIVOS
 @config_bp.route('/aplicar_autotags', methods=['POST'])
 def aplicar_autotags():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
     
     rutas = request.form.getlist('rutas_carpeta')
     nombres_tags_raw = request.form.getlist('nombres_tags')
@@ -213,7 +273,7 @@ def aplicar_autotags():
     tags_creados = 0
     
     for ruta, string_tags in zip(rutas, nombres_tags_raw):
-        # Si el campo está vacío, pasamos a la siguiente carpeta
+        # Si el campo esta vacio, pasamos a la siguiente carpeta
         if not string_tags.strip():
             continue
             
@@ -252,7 +312,6 @@ def aplicar_autotags():
 # ----------------------------------------------------- MODO DE AUTOVISUALIZACION DE MINIATURAS
 @config_bp.route('/guardar_modo_visual', methods=['POST'])
 def guardar_modo_visual():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
     
     nuevo_modo = request.form.get('modo_miniaturas')
     config = Configuracion.query.filter_by(clave='modo_miniaturas').first()
@@ -272,21 +331,22 @@ def guardar_modo_visual():
 def procesar_miniaturas_background(app_context):
     """Esta función corre en segundo plano para no congelar la página web."""
     with app_context:
-        # se crea la carpeta si no existe
         from app import app, db, Video
         carpeta_miniaturas = os.path.join(app.root_path, 'static', 'miniaturas')
         os.makedirs(carpeta_miniaturas, exist_ok=True)
 
-        videos = Video.query.all()
-        print(f"[+] Iniciando escaneo de miniaturas para {len(videos)} videos...")
+        # Solo trae los registros donde la columna 'tipo' sea igual a 'video'
+        videos = Video.query.filter_by(tipo='video').all()
+        
+        print(f"[+] Iniciando escaneo de miniaturas")
 
         for video in videos:
-            # Comprobamos si la primera miniatura de este video ya existe (ej: 5_1.jpg)
+            # aqui comprueba si la primera miniatura de este video ya existe
             ruta_img1 = os.path.join(carpeta_miniaturas, f"{video.id}_1.jpg")
             if os.path.exists(ruta_img1):
-                continue # Si ya existe, saltamos al siguiente video para ahorrar tiempo
+                continue # Si ya existe, pos no intentamos crear mas miniaturas
 
-            # Si no existe, usamos ffprobe para sacar la duración exacta en segundos
+            # Sacamos la duración exacta en segundos
             comando_duracion = [
                 FFPROBE_CMD, '-v', 'error', '-show_entries', 'format=duration', 
                 '-of', 'default=noprint_wrappers=1:nokey=1', video.ruta_completa
@@ -298,16 +358,9 @@ def procesar_miniaturas_background(app_context):
                 print(f"[!] Error leyendo duración de {video.ruta_completa}: {e}")
                 continue
 
-            ### if duracion < 5: 
-                # Si es muy corto, tomamos solo 1 foto justo a la mitad
-                momentos = [duracion * 0.5]
-            ### else:
-                # Si es normal, tomamos las 5 fotos
-                momentos = [duracion * 0.1, duracion * 0.3, duracion * 0.5, duracion * 0.7, duracion * 0.9] 
-
-            # Calculamos 5 marcas de tiempo: 10%, 30%, 50%, 70% y 90% del video
             momentos = [duracion * 0.1, duracion * 0.3, duracion * 0.5, duracion * 0.7, duracion * 0.9]
-            print(f"🎬 Extrayendo 5 miniaturas para: {video.ruta_completa.split('/')[-1]}")
+                
+            print(f"[T] Extrayendo 5 miniaturas para: {video.ruta_completa.split('/')[-1]}")
 
             # Extraemos una imagen por cada marca de tiempo
             for i, tiempo in enumerate(momentos, start=1):
@@ -319,20 +372,63 @@ def procesar_miniaturas_background(app_context):
                     FFMPEG_CMD, '-y', '-ss', str(tiempo), '-i', video.ruta_completa,
                     '-vframes', '1', '-q:v', '5', '-vf', 'scale=320:-1', ruta_salida
                 ]
-                # Ejecutamos ocultando los textos largos de FFmpeg
                 subprocess.run(comando_ffmpeg, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("[+] Los errores aparecen cuando intenta leer alguna imagen, es normal que pase.")
+                
         print("-" * 50)
         print("Se han generado las nuevas miniaturas!")
 
-# --- RUTA QUE ACTIVA EL BOTÓN ---
+# ----------------------------------------------------- EL BOTON DE GENERAR MINIATURAS MASIVAS
 @config_bp.route('/generar_miniaturas_masivas', methods=['POST'])
 def generar_miniaturas_masivas():
-    if not session.get('admin_logged_in'): return redirect(url_for('config.login'))
     
-    # Creamos un hilo independiente, le pasamos el contexto de la app y lo arrancamos
+    # se crea un hilo independiente, le pasamos el contexto de la app y lo ejecuta
     hilo = threading.Thread(target=procesar_miniaturas_background, args=(current_app._get_current_object().app_context(),))
     hilo.start()
     
     # El servidor devuelve la respuesta al navegador INMEDIATAMENTE, sin esperar a que terminen los videos
+    return redirect(url_for('config.panel'))
+
+# ----------------------------------------------------- ELIMINAR MINIATURAS
+@config_bp.route('/borrar_miniaturas', methods=['POST'])
+def borrar_miniaturas():
+    from app import app
+    import shutil
+    
+    carpeta_miniaturas = os.path.join(app.root_path, 'static', 'miniaturas')
+    
+    # Comprobamos que la carpeta exista antes de intentar borrarla
+    if os.path.exists(carpeta_miniaturas):
+        # 1. Eliminamos la carpeta y todo su contenido de un solo golpe
+        shutil.rmtree(carpeta_miniaturas)
+        # 2. La volvemos a crear vacía e intacta
+        os.makedirs(carpeta_miniaturas, exist_ok=True)
+        
+    print("[!] Las miniaturas han sido borradas con exito.")
+    
+    return redirect(url_for('config.panel'))
+
+# ----------------------------------------------------- RECALCULAR DURACIONES FALLIDAS
+@config_bp.route('/recalcular_duraciones', methods=['POST'])
+def recalcular_duraciones():
+    # Importacion interna
+    from app import obtener_duracion_ffmpeg
+    
+    # Buscamos los que tengan la palabra "Video" en el campo de duracin
+    videos_fallidos = Video.query.filter(Video.duracion == 'Video').all()
+    cantidad_actualizada = 0
+    
+    for video in videos_fallidos:
+        # calcular la duracion de nuevo
+        nueva_duracion = obtener_duracion_ffmpeg(video.ruta_completa)
+        
+        # Si la funcion logra obtener una duracion real (distinta a "Video"):
+        if nueva_duracion and nueva_duracion != 'Video':
+            video.duracion = nueva_duracion
+            cantidad_actualizada += 1
+            
+    db.session.commit()
+    
+    # comentario en la terminal del servidor
+    print(f"[+] RECALCULO: Se repararon con éxito {cantidad_actualizada} duraciones de videos.")
+    
     return redirect(url_for('config.panel'))

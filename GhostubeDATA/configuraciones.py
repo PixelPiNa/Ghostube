@@ -135,6 +135,7 @@ def guardar_ubicaciones():
         db.session.add(nueva_ubi)
 
     db.session.commit()
+    actualizar_caddyfile()
     return redirect(url_for('config.panel'))
 
 # ----------------------------------------------------- LISTA NEGRA DE TAGS
@@ -215,6 +216,7 @@ def purgar_db():
     # ---- Ejecutamos un VACUUM para exprimir el archivo .db y hacerlo pesar menos
     db.session.execute(db.text("VACUUM"))
     db.session.commit()
+    actualizar_caddyfile()
     
     print(f"--- PURGA COMPLETA: {carpetas_borradas} carpetas no encontradas y {videos_borrados} videos inexistentes eliminados.")
     
@@ -432,3 +434,43 @@ def recalcular_duraciones():
     print(f"[+] RECALCULO: Se repararon con éxito {cantidad_actualizada} duraciones de videos.")
     
     return redirect(url_for('config.panel'))
+
+# -----------------------------------------------------------------------------CADDY
+def actualizar_caddyfile():
+    """Genera un Caddyfile dinámico con los discos duros y recarga el servidor web sin apagarlo"""
+    from app import app
+    import os, platform, subprocess
+    from models import Ubicacion
+    
+    ubicaciones = Ubicacion.query.all()
+    ruta_caddyfile = os.path.join(app.root_path, 'Caddyfile')
+    
+    with open(ruta_caddyfile, 'w', encoding='utf-8') as f:
+        f.write(":9090 {\n")
+        f.write("    # Archivos estaticos de Ghostube\n")
+        f.write("    handle_path /static/* {\n")
+        f.write("        root * \"static\"\n")
+        f.write("        file_server\n")
+        f.write("    }\n\n")
+        
+        f.write("    # Carpetas del Usuario\n")
+        for ubi in ubicaciones:
+            if os.path.exists(ubi.ruta):
+                # Estandarizamos la ruta para que a Caddy no le den problemas las diagonales
+                ruta_limpia = ubi.ruta.replace('\\', '/')
+                f.write(f"    handle_path /disco_{ubi.id}/* {{\n")
+                f.write(f"        root * \"{ruta_limpia}\"\n")
+                f.write("        file_server\n")
+                f.write("    }\n\n")
+                
+        f.write("    # Backend Flask\n")
+        f.write("    reverse_proxy 127.0.0.1:9091\n")
+        f.write("}\n")
+    
+    # Le deci a Caddy que lea el nuevo archivo de inmediato
+    caddy_cmd = os.path.join(app.root_path, 'extenzzziones', 'caddy.exe') if platform.system() == 'Windows' else 'caddy'
+    try:
+        subprocess.run([caddy_cmd, 'reload', '--config', ruta_caddyfile], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print("[+] Configuracion de red Caddy actualizada y recargada con exito.")
+    except Exception as e:
+        pass

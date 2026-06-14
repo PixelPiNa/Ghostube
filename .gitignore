@@ -10,6 +10,8 @@ GhostubeDATA/instalacion/
 GhostubeDATA/extenzzziones/*.exe
 GhostubeDATA/extenzzziones/FFMPEG-LICENSE.txt
 
+GhostubeDATA/Caddyfile
+
 GhostubeDATA/__pycache__/
 *.pyc
 

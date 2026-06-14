@@ -1,0 +1,46 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acerca de este proyecto</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/O_logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
+    <style>
+        a{
+            text-decoration:underline;
+            color: white;
+            margin: 10 px;
+        }
+        h2{
+            color: #ffffff;
+        }
+        .justify{
+            text-align:justify;
+        }
+        .contenedor_grisoscuro{
+            padding: 20px 40px;
+            margin-top: 40px;
+        }
+        body{
+            line-height: 1.5;
+            letter-spacing: 0.8;
+        }
+        ol{
+            line-height: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="conten_titulogo">
+        <a href="/">
+        <img class="titulogo" src="{{ url_for('static', filename='img/Ghostube_logo.png') }}" alt="Ghostube" style="width: 30vw; min-width: 100px; height: auto;">
+        </a>
+    </div>
+    <div class="contenedor_grisoscuro">
+        <h2>Como entrar a Ghostube?</h2>
+        En el navegador de tu preferencia introduce este enlace:
+        <a href="{{ direccion_publica }}"><h1 style="color: #ffffff;">{{ direccion_publica }}</h1></a>
+    </div>
+
+
+</body>

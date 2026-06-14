@@ -2,6 +2,7 @@ import os
 import json
 import subprocess 
 import platform
+import socket
 import math       
 from flask import Flask, render_template, send_from_directory, request, redirect, url_for, jsonify, session
 from sqlalchemy import or_
@@ -29,6 +30,18 @@ if platform.system() == 'Windows':
     FFPROBE_CMD = os.path.join(BASE_DIR, 'extenzzziones', 'ffprobe.exe')
 else:
     FFPROBE_CMD = 'ffprobe'
+
+# ---------------------------------------------- Ver IP
+def obtener_ip_local():
+    """Obtiene la IP local real de la máquina dentro de la red Wi-Fi/LAN"""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
 
 
 # Esta funcion utiliza ffmpeg, una herramienta preinstalada en algunas distros de linux
@@ -326,6 +339,14 @@ def ver_video(id_video):
 @app.route('/boutm')
 def informacion():
     return render_template('boutm.html')
+# ---------------------------------------------- HTML de "IP"
+@app.route('/ghostube')
+def holamundo():
+    ip_red = obtener_ip_local()
+    # 2. Le pegamos el puerto 9090 (El puerto de alta velocidad de Caddy)
+    direccion_publica = f"http://{ip_red}:9090"
+    
+    return render_template('ip.html',direccion_publica=direccion_publica)
 
 
 # ---------------------------------------------- HERRAMIENTA: GUARDAR CAMBIOS DE UN VIDEO (TITULO Y TAGS)
@@ -358,9 +379,19 @@ def guardar_cambios(id_video):
 @app.route('/stream/<int:id_video>')
 def stream_video(id_video):
     video = Video.query.get_or_404(id_video)
-    directorio = os.path.dirname(video.ruta_completa)
-    nombre_archivo = os.path.basename(video.ruta_completa)
-    return send_from_directory(directorio, nombre_archivo)
+    
+    # Por seguridad, si la carpeta desaparecio
+    if not video.ubicacion:
+        return "Ubicación desconectada", 404
+        
+    ruta_relativa = os.path.relpath(video.ruta_completa, video.ubicacion.ruta)
+    ruta_relativa = ruta_relativa.replace('\\', '/') # Convertimos a formato web
+    
+    from urllib.parse import quote
+    # El navegador pide este link a Caddy sin que el usuario lo note
+    url_caddy = f"/disco_{video.ubicacion_id}/{quote(ruta_relativa)}"
+    
+    return redirect(url_caddy)
 
 
 # ---------------------------------------------- Gracias por descargar este pequeño proyecto hecho con más fé que conocimiento
@@ -384,4 +415,4 @@ if __name__ == '__main__':
                 db.session.add(nueva_config)
                 
         db.session.commit()
-    app.run(debug=True, port=9090, host='0.0.0.0')
+    app.run(debug=False, port=9091, host='127.0.0.1')

@@ -19,7 +19,7 @@ cd "GhostubeDATA" || (
     pause
     exit /b
 )
-
+cls
 :menu
 echo ================================================
 echo.                                               
@@ -41,55 +41,33 @@ if "%opcion%"=="1" (
     python -m venv instalacion
     echo [+] Instalando dependencias...
     instalacion\Scripts\pip install -r requirements.txt
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
+    cls
     echo [!] Instalacion completada.
     goto menu
 ) else if "%opcion%"=="2" (
-    echo [+] Iniciando servidor...
-    instalacion\Scripts\python app.py
-    goto menu
+    cls
+    echo [+] Iniciando servidor flask...
+    start /b instalacion\Scripts\python app.py
+    timeout /t 2 /nobreak > nul
+
+    echo [+] Iniciando servidor Caddy...
+    start /b extenzzziones\caddy.exe run --config Caddyfile
+    timeout /t 2 /nobreak > nul
+    echo.
+    echo.
+
+    echo ===================================================
+    echo  ENTRA A ESTE ENLACE PARA SABER COMO USAR GHOSTUBE
+    echo   http://localhost:9090/ghostube
+    echo ===================================================
+    echo   Para apagar el servidor: presiona Ctrl+C y
+    echo   cierra esta ventana.
+    echo.
+
 ) else if "%opcion%"=="3" (
     exit /b
 ) else (
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
-    echo.
+    cls
     echo [ERROR] Opcion no valida.
     goto menu
 )

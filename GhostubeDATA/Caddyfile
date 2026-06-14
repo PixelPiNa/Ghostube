@@ -1,0 +1,9 @@
+:9090 {
+    # Todo lo que este en la carpeta static lo sirve Caddy
+    file_server /static/* {
+        root .
+    }
+
+    # Todo lo demas se lo envía a Flask
+    reverse_proxy 127.0.0.1:9091
+}

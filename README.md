@@ -31,6 +31,7 @@ http://localhost:9090/ghostube
 - **Control parental:** Puedes bloquear ciertas secciones de la pagina detrás de una contraseña.
 - **Ocultar Tags:** Los videos con *tags ocultos* no se mostraran por ningun lado a menos que escribas exactamente el nombre del tag en el buscador.
 - **Autoetiquetado por carpetas:** ¿Tienes cientos de videos? Pues te otorgo la posibilidad de aplicar tags a carpetas completas.
+- **Varias instancias del servidor:** ¡Tienes la posibilidad de cambiar los puertos desde el orquestador por cada copia del proyecto! Esto te permite tener varias instancias de Ghostube en el mismo servidor. Perfecto si quieres un servidor de peliculas y otro de fotos de viajes familiares.
 
 ## ¿Quieres acceder al servidor desde fuera de tu casa?
 ¡Te recomiendo usar Tailscale para esa tarea! No puedo hacer más que recomendartelo.

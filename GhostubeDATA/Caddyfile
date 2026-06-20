@@ -1,9 +1,15 @@
+{
+    admin localhost:2019
+}
+
 :9090 {
-    # Todo lo que este en la carpeta static lo sirve Caddy
-    file_server /static/* {
-        root .
+    # Archivos estaticos de Ghostube
+    handle_path /static/* {
+        root * "static"
+        file_server
     }
 
-    # Todo lo demas se lo envía a Flask
+    # Carpetas del Usuario
+    # Backend Flask
     reverse_proxy 127.0.0.1:9091
 }

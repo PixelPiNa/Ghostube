@@ -1,0 +1,5 @@
+todo:
+
+
+Ideas:
+- Contador de usuarios activos

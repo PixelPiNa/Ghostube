@@ -20,6 +20,12 @@ app.secret_key = os.urandom(24)
 db.init_app(app)
 app.register_blueprint(config_bp)
 
+# --- CONFIGURACION DE RED ---
+PUERTO_CADDY = 9090
+PUERTO_FLASK = 9091
+PUERTO_CADDY_ADMIN = 2019
+# --- FIN CONFIGURACION ---
+
 # ---------------------------------------------- CONFIGURACIÓN DE EXTENSIONES 
 EXT_VIDEO = ('.mp4', '.mkv', '.avi', '.mov', '.webm')
 EXT_IMAGEN = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
@@ -344,7 +350,7 @@ def informacion():
 def holamundo():
     ip_red = obtener_ip_local()
     # 2. Le pegamos el puerto 9090 (El puerto de alta velocidad de Caddy)
-    direccion_publica = f"http://{ip_red}:9090"
+    direccion_publica = f"http://{ip_red}:{PUERTO_CADDY}"
     
     return render_template('ip.html',direccion_publica=direccion_publica)
 
@@ -415,4 +421,4 @@ if __name__ == '__main__':
                 db.session.add(nueva_config)
                 
         db.session.commit()
-    app.run(debug=False, port=9091, host='127.0.0.1')
+    app.run(debug=False, port=PUERTO_FLASK, host='127.0.0.1')

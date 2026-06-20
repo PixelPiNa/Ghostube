@@ -9,6 +9,12 @@ from flask import current_app
 
 config_bp = Blueprint('config', __name__)
 
+# --- CONFIGURACION DE RED ---
+PUERTO_CADDY = 9090
+PUERTO_FLASK = 9091
+PUERTO_CADDY_ADMIN = 2019
+# --- FIN CONFIGURACION ---
+
 
 # ----------------------------------------------------- Ver si esto es windos o linus pa usar ffmpeg
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -446,7 +452,12 @@ def actualizar_caddyfile():
     ruta_caddyfile = os.path.join(app.root_path, 'Caddyfile')
     
     with open(ruta_caddyfile, 'w', encoding='utf-8') as f:
-        f.write(":9090 {\n")
+        f.write("{\n")
+        f.write(f"    admin localhost:{PUERTO_CADDY_ADMIN}\n")
+        f.write("}\n\n")
+
+        # 2. BLOQUE DEL SERVIDOR MULTIMEDIA
+        f.write(f":{PUERTO_CADDY} {{\n")
         f.write("    # Archivos estaticos de Ghostube\n")
         f.write("    handle_path /static/* {\n")
         f.write("        root * \"static\"\n")
@@ -456,7 +467,6 @@ def actualizar_caddyfile():
         f.write("    # Carpetas del Usuario\n")
         for ubi in ubicaciones:
             if os.path.exists(ubi.ruta):
-                # Estandarizamos la ruta para que a Caddy no le den problemas las diagonales
                 ruta_limpia = ubi.ruta.replace('\\', '/')
                 f.write(f"    handle_path /disco_{ubi.id}/* {{\n")
                 f.write(f"        root * \"{ruta_limpia}\"\n")
@@ -464,7 +474,7 @@ def actualizar_caddyfile():
                 f.write("    }\n\n")
                 
         f.write("    # Backend Flask\n")
-        f.write("    reverse_proxy 127.0.0.1:9091\n")
+        f.write(f"    reverse_proxy 127.0.0.1:{PUERTO_FLASK}\n")
         f.write("}\n")
     
     # Le deci a Caddy que lea el nuevo archivo de inmediato

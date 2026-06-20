@@ -55,9 +55,10 @@ if [ "$opcion" == "1" ]; then
         echo "================================================"
         echo " 1.- PREPARANDO ENTORNO VIRTUAL PYTHON"
         echo "================================================"
-        if ! python3 -c "import venv" &> /dev/null; then
-            echo "[+] Instalando paquete python3-venv..."
-            sudo apt update
+        if ! python3 -c "import ensurepip" &> /dev/null; then
+            echo "[+] El modulo de entornos virtuales esta incompleto."
+            echo "[+] Instalando paquete python3-venv automaticamente..."
+            sudo apt update > /dev/null 2>&1
             sudo apt install -y python3-venv
         fi
 

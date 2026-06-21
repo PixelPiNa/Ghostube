@@ -1,4 +1,4 @@
-# Ghostube
+![gHOSTube](https://github.com/PixelPiNa/Ghostube/blob/c7f88d4db89fcf26f5c800dd03a550c936b9f040/GhostubeDATA/static/img/Ghostube_logo.png)
 Ghostube es un servidor web hecho en Flask que permite levantar tu propio sitio de video local basado en Tags.
 Este proyecto busca brindarte una experiencia muy comoda para ver tus propios videos con tu propio servidor ¡Totalmente local y aislado del internet!.
 Hecho especificamente para esas personas que buscan una alternativa decente para la visualizacion de su propio contenido a traves de una interfaz visual intuitiva, amigable e interactiva.

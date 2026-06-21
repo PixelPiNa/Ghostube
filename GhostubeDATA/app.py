@@ -168,17 +168,16 @@ def construir_query_busqueda(busqueda, modo_busqueda, modo_vis, orden):
             break 
 
     # Aplicamos el filtro de ocultar contenido
-    config_sensible = Configuracion.query.filter_by(clave='ocultar_sensible').first()
-    if config_sensible and config_sensible.valor == 'True':
-        if tag_oculto_buscado:
-            # Si se buscó el tag exacto, se muestran los videos con el tag
-            query = query.filter(or_(
-                ~Video.tags.any(Tag.oculto == True),
-                Video.tags.contains(tag_oculto_buscado)
-            ))
-        else:
-            # Si no se busco el tag oculto, no se muestra nada que lo contenga
-            query = query.filter(~Video.tags.any(Tag.oculto == True))
+    if tag_oculto_buscado:
+        # Se escribio el tag exacto, entonces agregamos los videos a la query.
+        query = query.filter(or_(
+            ~Video.tags.any(Tag.oculto == True),
+            Video.tags.contains(tag_oculto_buscado)
+        ))
+    else:
+        # Si nadie está buscando el tag secreto de forma exacta (búsqueda normal o inicio):
+        # El sistema limpia la pantalla de cualquier video que contenga un tag oculto.
+        query = query.filter(~Video.tags.any(Tag.oculto == True))
 
     # Continuamos buscando tags normalmente
     if terminos:
@@ -254,11 +253,17 @@ def guardian_de_seguridad():
             
             for termino in terminos:
                 tag_prohibido = Tag.query.filter(Tag.nombre.ilike(termino), Tag.oculto == True).first()
+                
                 if tag_prohibido:
-                    if not session.get('admin_logged_in'):
-                        session['next_url'] = request.url # Guardamos la búsqueda para completarla luego del login
-                        return redirect(url_for('config.login'))
-
+                    # El tag secreto fue descubierto y el checkbox está encendido.
+                    # Verificamos rápidamente si hay una contraseña guardada en el diccionario de arriba:
+                    config_pass = configs.get('pass_maestra')
+                    
+                    if config_pass and config_pass != "":
+                        if not session.get('admin_logged_in'):
+                            # BOMBAZO: Lo mandamos al login
+                            session['next_url'] = request.url 
+                            return redirect(url_for('config.login'))
 
 # ---------------------------------------------> RUTAS <---
 

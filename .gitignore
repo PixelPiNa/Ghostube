@@ -7,12 +7,12 @@ GhostubeDATA/instance/
 
 GhostubeDATA/instalacion/
 
-GhostubeDATA/extenzzziones/*.exe
-GhostubeDATA/extenzzziones/FFMPEG-LICENSE.txt
-GhostubeDATA/extenzzziones/CADDY-LICENSE.txt
+GhostubeDATA/static/miniaturas/
 
-GhostubeDATA/Caddyfile
-asd.txt
+GhostubeDATA/extenzzziones/
+
+Caddyfile
+puertos.txt
 
 GhostubeDATA/__pycache__/
 *.pyc
@@ -20,7 +20,3 @@ GhostubeDATA/__pycache__/
 # Archivos de sistema operativo
 .DS_Store
 Thumbs.db
-
-GhostubeDATA/static/miniaturas/
-
-

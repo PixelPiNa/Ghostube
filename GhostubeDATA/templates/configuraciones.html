@@ -300,6 +300,7 @@
             <h3 style="text-align: center;">Opciones de Bloqueo:</h3>
             <p class="texto_info">Para usuarios que comparten su servidor con otras personas, 
                 estas opciones permiten bloquear el acceso a ciertas partes del servidor gracias a una contraseña.</p>
+                <p style="color: #ff5252;"> Necesitas establecer una contraseña para que estos cambios se apliquen</p>
             <label style="cursor: pointer;">
                 <input type="checkbox" name="bloqueo_general" {% if b_general %}checked{% endif %}>
                 &ensp;&ensp;Bloquear TODO (No se podra usar el servidor sin iniciar sesión)
@@ -312,7 +313,7 @@
             
             <label style="cursor: pointer;">
                 <input type="checkbox" name="bloqueo_configuraciones" {% if b_config %}checked{% endif %}>
-                &ensp;&ensp;Bloquear este panel de Configuraciones
+                &ensp;&ensp;Bloquear este panel de Configuraciones (recomendado)
             </label>
             
             <label style="cursor: pointer;">

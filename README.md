@@ -38,3 +38,11 @@ http://localhost:9090/ghostube
 (No es recomendable dejar un puerto abierto al internet).
 
 # Gracias por usar, recuerda apoyarme de cualquier manera!
+## Permisos
+Recursos (imágenes, iconos): uso limitado. Los recursos en GhostubeDATA/static/img/ son para uso únicamente dentro de este repositorio y sus forks en GitHub; no se permite reutilización fuera del proyecto sin permiso. 
+
+## Licencia
+Este proyecto está licenciado bajo PolyForm Noncommercial 1.0.0.
+
+**Resumen:** El código es **libre para ver, forquear y modificar para uso personal y no comercial**.
+**No está permitido:** vender, cobrar por acceso o usar comercialmente sin permiso previo. Ver [LICENSE](LICENSE) para detalles.

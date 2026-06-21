@@ -36,4 +36,7 @@ http://localhost:9090/ghostube
 ¡Te recomiendo usar Tailscale para esa tarea! No puedo hacer más que recomendartelo.
 (No es recomendable dejar un puerto abierto al internet).
 
+# 
+Recursos (imágenes, iconos): uso limitado. Los recursos en GhostubeDATA/static/img/ son para uso únicamente dentro de este repositorio y sus forks en GitHub; no se permite reutilización fuera del proyecto sin permiso. Ver [LICENSE](LICENSE) para detalles.
+
 # Gracias por usar, recuerda apoyarme de cualquier manera!

@@ -1,0 +1,15 @@
+{
+    admin localhost:2019
+}
+
+:9090 {
+    # Archivos estaticos de Ghostube
+    handle_path /static/* {
+        root * "static"
+        file_server
+    }
+
+    # Carpetas del Usuario
+    # Backend Flask
+    reverse_proxy 127.0.0.1:9091
+}
